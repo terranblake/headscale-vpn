@@ -28,6 +28,7 @@ services:
     command: serve
     environment:
       - HEADSCALE_CONFIG_FILE=/etc/headscale/config.yaml
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-headscale_password_change_me}
     volumes:
       - ./config/headscale:/etc/headscale:ro
       - headscale-data:/var/lib/headscale
