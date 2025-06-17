@@ -93,7 +93,8 @@ log:
   level: info
 
 # ACL (Access Control List) configuration
-acl_policy_path: /etc/headscale/acl.hjson
+policy:
+  path: /etc/headscale/acl.hjson
 
 # OIDC configuration (disabled by default)
 oidc:
