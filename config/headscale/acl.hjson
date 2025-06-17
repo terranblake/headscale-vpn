@@ -5,10 +5,10 @@
 {
   // Define groups of users/devices
   "groups": {
-    "group:admin": ["admin"],
-    "group:devices": ["user1", "user2"],
-    "group:exit-nodes": ["vpn-exit-node"],
-    "group:proxy-nodes": ["proxy-gateway"]
+    "group:admin": ["admin@headscale.local"],
+    "group:devices": ["user1@headscale.local", "user2@headscale.local"],
+    "group:exit-nodes": ["vpn-exit-node@headscale.local"],
+    "group:proxy-nodes": ["proxy-gateway@headscale.local"]
   },
 
   // Define host groups and subnets

@@ -23,8 +23,8 @@ noise:
 
 # IP prefixes for the mesh network
 ip_prefixes:
-  - fd7a:115c:a1e0::/48
-  - 100.64.0.0/10
+  - "fd7a:115c:a1e0::/48"
+  - "100.64.0.0/10"
 
 # Database configuration
 database:
@@ -34,7 +34,7 @@ database:
     port: 5432
     name: headscale
     user: headscale
-    pass: headscale_password_change_me
+    pass: "${POSTGRES_PASSWORD}"
     max_open_conns: 10
     max_idle_conns: 10
     conn_max_idle_time: 3600s
@@ -94,10 +94,6 @@ log:
 
 # ACL (Access Control List) configuration
 acl_policy_path: /etc/headscale/acl.hjson
-
-# Unix socket for headscale CLI
-unix_socket: /var/run/headscale/headscale.sock
-unix_socket_permission: "0770"
 
 # OIDC configuration (disabled by default)
 oidc:
