@@ -22,9 +22,9 @@ noise:
   private_key_path: /var/lib/headscale/noise_private.key
 
 # IP prefixes for the mesh network
-ip_prefixes:
-  - 100.64.0.0/10
-  - fd7a:115c:a1e0::/48
+prefixes:
+  ipv4: 100.64.0.0/10
+  ipv6: fd7a:115c:a1e0::/48
 
 # Database configuration
 database:
