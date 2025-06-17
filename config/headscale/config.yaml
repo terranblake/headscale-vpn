@@ -107,7 +107,6 @@ oidc:
   extra_params: {}
   allowed_domains: []
   allowed_users: []
-  strip_email_domain: true
 
 # Randomize client port (helps with NAT traversal)
 randomize_client_port: false
