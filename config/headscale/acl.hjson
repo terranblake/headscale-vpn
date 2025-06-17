@@ -5,10 +5,10 @@
 {
   // Define groups of users/devices
   "groups": {
-    "group:admin": ["admin@headscale.local"],
-    "group:devices": ["user1@headscale.local", "user2@headscale.local"],
-    "group:exit-nodes": ["vpn-exit-node@headscale.local"],
-    "group:proxy-nodes": ["proxy-gateway@headscale.local"]
+    "group:admin": ["admin"],
+    "group:devices": ["user1", "user2"],
+    "group:exit-nodes": ["vpn-exit-node"],
+    "group:proxy-nodes": ["proxy-gateway"]
   },
 
   // Define host groups and subnets
@@ -111,20 +111,5 @@
       "target": ["group:proxy-nodes"], 
       "attr": ["proxy"]
     }
-  ],
-
-  // Routing policies for selective bypass
-  "routes": {
-    // Direct routes that bypass VPN
-    "bypass": [
-      "192.168.0.0/16",
-      "10.0.0.0/8", 
-      "172.16.0.0/12"
-    ],
-    
-    // Routes that must go through VPN
-    "vpn-only": [
-      "0.0.0.0/0"
-    ]
-  }
+  ]
 }
