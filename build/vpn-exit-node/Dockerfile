@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     unzip \
     dnsutils \
+    systemd \
     supervisor \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
