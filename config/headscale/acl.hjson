@@ -86,8 +86,8 @@
     
     // Auto-approve route advertisements for private networks
     "routes": {
-      "home-network": ["group:exit-nodes"],
-      "docker-network": ["group:exit-nodes", "group:proxy-nodes"]
+      "192.168.1.0/24": ["group:exit-nodes"],
+      "172.20.0.0/16": ["group:exit-nodes", "group:proxy-nodes"]
     }
   },
 
