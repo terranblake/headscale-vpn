@@ -1,0 +1,115 @@
+---
+# Headscale configuration file
+# https://headscale.net/ref/configuration/
+
+# The server's URL (this will be used by clients to connect)
+server_url: http://localhost:8080
+
+# Address and port to listen on
+listen_addr: 0.0.0.0:8080
+
+# Address and port for the gRPC API
+grpc_listen_addr: 0.0.0.0:50443
+
+# Address and port for metrics
+metrics_listen_addr: 0.0.0.0:9090
+
+# Disable private key check warnings
+private_key_path: /var/lib/headscale/private.key
+
+# Disable noise warnings
+noise:
+  private_key_path: /var/lib/headscale/noise_private.key
+
+# IP prefixes for the mesh network
+ip_prefixes:
+  - fd7a:115c:a1e0::/48
+  - 100.64.0.0/10
+
+# Database configuration
+database:
+  type: postgres
+  postgres:
+    host: headscale-db
+    port: 5432
+    name: headscale
+    user: headscale
+    pass: headscale_password_change_me
+    max_open_conns: 10
+    max_idle_conns: 10
+    conn_max_idle_time: 3600s
+
+# DERP configuration - use built-in DERP servers or specify custom
+derp:
+  server:
+    enabled: false
+    region_id: 999
+    region_code: "headscale"
+    region_name: "Headscale Embedded DERP"
+    stun_listen_addr: "0.0.0.0:3478"
+  
+  # Use Tailscale's DERP servers (can be disabled for full self-hosting)
+  urls:
+    - https://controlplane.tailscale.com/derpmap/default
+  
+  # Paths to custom DERP map files
+  paths: []
+  
+  # Auto update frequency
+  auto_update_enabled: true
+  update_frequency: 24h
+
+# Disable Tailscale's coordination servers completely
+disable_check_updates: true
+
+# Ephemeral node configuration
+ephemeral_node_inactivity_timeout: 30m
+
+# Node update check interval
+node_update_check_interval: 10s
+
+# DNS configuration
+dns_config:
+  # Override local DNS
+  override_local_dns: true
+  
+  # Nameservers to use
+  nameservers:
+    - 1.1.1.1
+    - 8.8.8.8
+    - 2606:4700:4700::1111
+    - 2001:4860:4860::8888
+  
+  # Domains to resolve
+  domains: []
+  
+  # Magic DNS settings
+  magic_dns: true
+  base_domain: headscale.local
+
+# Logging configuration
+log:
+  format: text
+  level: info
+
+# ACL (Access Control List) configuration
+acl_policy_path: /etc/headscale/acl.hjson
+
+# Unix socket for headscale CLI
+unix_socket: /var/run/headscale/headscale.sock
+unix_socket_permission: "0770"
+
+# OIDC configuration (disabled by default)
+oidc:
+  only_start_if_oidc_is_available: false
+  issuer: ""
+  client_id: ""
+  client_secret: ""
+  scope: ["openid", "profile", "email"]
+  extra_params: {}
+  allowed_domains: []
+  allowed_users: []
+  strip_email_domain: true
+
+# Randomize client port (helps with NAT traversal)
+randomize_client_port: false

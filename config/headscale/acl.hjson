@@ -1,0 +1,132 @@
+// Headscale ACL Policy
+// This file defines access controls and routing policies for the mesh network
+// Documentation: https://headscale.net/ref/acls/
+
+{
+  // Define groups of users/devices
+  "groups": {
+    "group:admin": ["admin"],
+    "group:devices": ["user1", "user2"],
+    "group:exit-nodes": ["vpn-exit-node"],
+    "group:proxy-nodes": ["proxy-gateway"]
+  },
+
+  // Define host groups and subnets
+  "hosts": {
+    "home-network": "192.168.1.0/24",
+    "docker-network": "172.20.0.0/16",
+    "private-ranges": [
+      "10.0.0.0/8",
+      "172.16.0.0/12",
+      "192.168.0.0/16"
+    ]
+  },
+
+  // Define access control rules
+  "acls": [
+    // Admin can access everything
+    {
+      "action": "accept",
+      "src": ["group:admin"],
+      "dst": ["*:*"]
+    },
+
+    // All devices can communicate with each other
+    {
+      "action": "accept",
+      "src": ["group:devices"],
+      "dst": ["group:devices:*"]
+    },
+
+    // All devices can access exit nodes for VPN routing
+    {
+      "action": "accept",
+      "src": ["group:devices"],
+      "dst": ["group:exit-nodes:*"]
+    },
+
+    // All devices can access proxy nodes
+    {
+      "action": "accept",
+      "src": ["group:devices"],
+      "dst": ["group:proxy-nodes:8080,8443"]
+    },
+
+    // Exit nodes need to communicate with headscale
+    {
+      "action": "accept",
+      "src": ["group:exit-nodes"],
+      "dst": ["*:8080,50443"]
+    },
+
+    // Proxy nodes need to communicate with headscale
+    {
+      "action": "accept",
+      "src": ["group:proxy-nodes"],
+      "dst": ["*:8080,50443"]
+    },
+
+    // Allow DNS queries
+    {
+      "action": "accept",
+      "src": ["*"],
+      "dst": ["*:53"]
+    },
+
+    // Allow HTTP/HTTPS for proxy functionality
+    {
+      "action": "accept",
+      "src": ["group:devices"],
+      "dst": ["group:proxy-nodes:80,443,8080,8443"]
+    }
+  ],
+
+  // Define exit node routing policies
+  "autoApprovers": {
+    // Auto-approve exit node advertisements
+    "exitNode": ["group:exit-nodes"],
+    
+    // Auto-approve route advertisements for private networks
+    "routes": {
+      "home-network": ["group:exit-nodes"],
+      "docker-network": ["group:exit-nodes", "group:proxy-nodes"]
+    }
+  },
+
+  // SSH access rules
+  "ssh": [
+    {
+      "action": "accept",
+      "src": ["group:admin"],
+      "dst": ["group:devices", "group:exit-nodes", "group:proxy-nodes"],
+      "users": ["root", "ubuntu", "tailscale"]
+    }
+  ],
+
+  // Define which nodes can act as exit nodes
+  "nodeAttrs": [
+    {
+      "target": ["group:exit-nodes"],
+      "attr": ["exit-node"]
+    },
+    {
+      "target": ["group:proxy-nodes"], 
+      "attr": ["proxy"]
+    }
+  ],
+
+  // Routing policies for selective bypass
+  "routes": {
+    // Direct routes that bypass VPN
+    "bypass": [
+      "192.168.0.0/16",
+      "10.0.0.0/8", 
+      "172.16.0.0/12"
+    ],
+    
+    // Routes that must go through VPN
+    "vpn-only": [
+      "0.0.0.0/0"
+    ]
+  }
+}
