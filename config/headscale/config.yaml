@@ -23,8 +23,8 @@ noise:
 
 # IP prefixes for the mesh network
 prefixes:
-  ipv4: 100.64.0.0/10
-  ipv6: fd7a:115c:a1e0::/48
+  - 100.64.0.0/10
+  - fd7a:115c:a1e0::/48
 
 # Database configuration
 database:
