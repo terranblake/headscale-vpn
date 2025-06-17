@@ -15,11 +15,9 @@
   "hosts": {
     "home-network": "192.168.1.0/24",
     "docker-network": "172.20.0.0/16",
-    "private-ranges": [
-      "10.0.0.0/8",
-      "172.16.0.0/12",
-      "192.168.0.0/16"
-    ]
+    "private-class-a": "10.0.0.0/8",
+    "private-class-b": "172.16.0.0/12", 
+    "private-class-c": "192.168.0.0/16"
   },
 
   // Define access control rules
