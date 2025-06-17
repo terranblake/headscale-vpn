@@ -49,7 +49,6 @@ RUN unzip -q /tmp/nordvpn.zip -d /etc/openvpn/nordvpn/
 RUN rm /tmp/nordvpn.zip
 
 # Copy configuration files
-COPY config/ /etc/vpn-exit/
 COPY scripts/ /usr/local/bin/
 COPY supervisord.conf /etc/supervisor/conf.d/
 
