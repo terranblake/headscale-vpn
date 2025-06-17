@@ -34,7 +34,7 @@ database:
     port: 5432
     name: headscale
     user: headscale
-    pass: "${POSTGRES_PASSWORD}"
+    pass: "headscale_secure_db_pass_2025"
     max_open_conns: 10
     max_idle_conns: 10
     conn_max_idle_time: 3600s
