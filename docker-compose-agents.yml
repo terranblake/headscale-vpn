@@ -1,7 +1,10 @@
 version: '3.8'
 services:
   documentation-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: documentation-agent
     volumes:
       - .:/workspace
@@ -21,7 +24,10 @@ services:
     networks:
       - openhands-network
   infrastructure-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: infrastructure-agent
     volumes:
       - .:/workspace
@@ -43,7 +49,10 @@ services:
     networks:
       - openhands-network
   family-experience-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: family-experience-agent
     volumes:
       - .:/workspace
@@ -65,7 +74,10 @@ services:
     networks:
       - openhands-network
   operations-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: operations-agent
     volumes:
       - .:/workspace
@@ -87,7 +99,10 @@ services:
     networks:
       - openhands-network
   monitor-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: monitor-agent
     volumes:
       - .:/workspace
