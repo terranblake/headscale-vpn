@@ -8,11 +8,16 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/documentation-agent.yaml
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
+      - SANDBOX_USER_ID=1000
+      - SANDBOX_VOLUMES=/workspace
     command: python -m openhands.core.main -t "You are the Documentation Specialist agent. Read your configuration from /workspace/.openhands/agents/documentation-agent.yaml and work on documentation tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
@@ -26,11 +31,16 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/infrastructure-agent.yaml
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
+      - SANDBOX_USER_ID=1000
+      - SANDBOX_VOLUMES=/workspace
     command: python -m openhands.core.main -t "You are the Infrastructure Specialist agent. Read your configuration from /workspace/.openhands/agents/infrastructure-agent.yaml and work on infrastructure automation and deployment tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
@@ -44,11 +54,16 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/family-experience-agent.yaml
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
+      - SANDBOX_USER_ID=1000
+      - SANDBOX_VOLUMES=/workspace
     command: python -m openhands.core.main -t "You are the Family Experience Specialist agent. Read your configuration from /workspace/.openhands/agents/family-experience-agent.yaml and work on family-oriented features and user experience for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
@@ -62,11 +77,16 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/operations-agent.yaml
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
+      - SANDBOX_USER_ID=1000
+      - SANDBOX_VOLUMES=/workspace
     command: python -m openhands.core.main -t "You are the Operations Specialist agent. Read your configuration from /workspace/.openhands/agents/operations-agent.yaml and work on monitoring, backup, and operational tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
@@ -80,11 +100,16 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/monitor-agent.yaml
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
+      - SANDBOX_USER_ID=1000
+      - SANDBOX_VOLUMES=/workspace
     command: python -m openhands.core.main -t "You are the Quality Assurance Monitor agent. Read your configuration from /workspace/.openhands/agents/monitor-agent.yaml and monitor all other agents' work for quality and adherence to project principles."
     working_dir: /workspace
     restart: unless-stopped
