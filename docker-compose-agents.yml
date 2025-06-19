@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   documentation-agent:
     image: ghcr.io/all-hands-ai/openhands:main
@@ -8,22 +7,18 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/documentation-agent.yaml
-      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
-      - SANDBOX_USER_ID=1000
-      - SANDBOX_VOLUMES=/workspace:/workspace:rw
+      - SANDBOX_TYPE=local
+      - WORKSPACE_BASE=/workspace
     command: python -m openhands.core.main -t "You are the Documentation Specialist agent. Read your configuration from /workspace/.openhands/agents/documentation-agent.yaml and work on documentation tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
   infrastructure-agent:
     image: ghcr.io/all-hands-ai/openhands:main
     container_name: infrastructure-agent
@@ -31,22 +26,18 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/infrastructure-agent.yaml
-      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
-      - SANDBOX_USER_ID=1000
-      - SANDBOX_VOLUMES=/workspace:/workspace:rw
+      - SANDBOX_TYPE=local
+      - WORKSPACE_BASE=/workspace
     command: python -m openhands.core.main -t "You are the Infrastructure Specialist agent. Read your configuration from /workspace/.openhands/agents/infrastructure-agent.yaml and work on infrastructure automation and deployment tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
   family-experience-agent:
     image: ghcr.io/all-hands-ai/openhands:main
     container_name: family-experience-agent
@@ -54,22 +45,18 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/family-experience-agent.yaml
-      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
-      - SANDBOX_USER_ID=1000
-      - SANDBOX_VOLUMES=/workspace:/workspace:rw
+      - SANDBOX_TYPE=local
+      - WORKSPACE_BASE=/workspace
     command: python -m openhands.core.main -t "You are the Family Experience Specialist agent. Read your configuration from /workspace/.openhands/agents/family-experience-agent.yaml and work on family-oriented features and user experience for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
   operations-agent:
     image: ghcr.io/all-hands-ai/openhands:main
     container_name: operations-agent
@@ -77,22 +64,18 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/operations-agent.yaml
-      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
-      - SANDBOX_USER_ID=1000
-      - SANDBOX_VOLUMES=/workspace:/workspace:rw
+      - SANDBOX_TYPE=local
+      - WORKSPACE_BASE=/workspace
     command: python -m openhands.core.main -t "You are the Operations Specialist agent. Read your configuration from /workspace/.openhands/agents/operations-agent.yaml and work on monitoring, backup, and operational tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
   monitor-agent:
     image: ghcr.io/all-hands-ai/openhands:main
     container_name: monitor-agent
@@ -100,36 +83,30 @@ services:
       - .:/workspace
       - ~/.gitconfig:/root/.gitconfig:ro
       - ~/.ssh:/root/.ssh:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.openhands:/.openhands
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/monitor-agent.yaml
-      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.44-nikolaik
-      - SANDBOX_USER_ID=1000
-      - SANDBOX_VOLUMES=/workspace:/workspace:rw
+      - SANDBOX_TYPE=local
+      - WORKSPACE_BASE=/workspace
     command: python -m openhands.core.main -t "You are the Quality Assurance Monitor agent. Read your configuration from /workspace/.openhands/agents/monitor-agent.yaml and monitor all other agents' work for quality and adherence to project principles."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
 networks:
   openhands-network:
     driver: bridge
-
 # Optional: Add monitoring and logging
 # Uncomment the following services if you want advanced monitoring
-
 #  portainer:
 #    image: portainer/portainer-ce:latest
 #    container_name: portainer
 #    ports:
 #      - "9000:9000"
 #    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
+#      - 
 #      - portainer_data:/data
 #    restart: unless-stopped
 #    networks:
@@ -139,11 +116,10 @@ networks:
 #    image: containrrr/watchtower
 #    container_name: watchtower
 #    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
+#      - 
 #    command: --interval 3600 --cleanup
 #    restart: unless-stopped
 #    networks:
 #      - openhands-network
-
 #volumes:
 #  portainer_data:
