@@ -1,8 +1,10 @@
 version: '3.8'
-
 services:
   documentation-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: documentation-agent
     volumes:
       - .:/workspace
@@ -10,14 +12,22 @@ services:
       - ~/.ssh:/root/.ssh:ro
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-    command: --config /workspace/.openhands/agents/documentation-agent.yaml --workspace-dir /workspace --agent-name "Documentation Specialist"
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - AGENT_CONFIG_FILE=/workspace/.openhands/agents/documentation-agent.yaml
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+    command: python -m openhands.core.main -t "You are the Documentation Specialist agent. Read your configuration from /workspace/.openhands/agents/documentation-agent.yaml and work on documentation tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
   infrastructure-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: infrastructure-agent
     volumes:
       - .:/workspace
@@ -25,14 +35,24 @@ services:
       - ~/.ssh:/root/.ssh:ro
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-    command: --config /workspace/.openhands/agents/infrastructure-agent.yaml --workspace-dir /workspace --agent-name "Infrastructure Specialist"
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - AGENT_CONFIG_FILE=/workspace/.openhands/agents/infrastructure-agent.yaml
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+    command: python -m openhands.core.main -t "You are the Infrastructure Specialist agent. Read your configuration from /workspace/.openhands/agents/infrastructure-agent.yaml and work on infrastructure automation and deployment tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
   family-experience-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: family-experience-agent
     volumes:
       - .:/workspace
@@ -40,14 +60,24 @@ services:
       - ~/.ssh:/root/.ssh:ro
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-    command: --config /workspace/.openhands/agents/family-experience-agent.yaml --workspace-dir /workspace --agent-name "Family Experience Specialist"
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - AGENT_CONFIG_FILE=/workspace/.openhands/agents/family-experience-agent.yaml
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+    command: python -m openhands.core.main -t "You are the Family Experience Specialist agent. Read your configuration from /workspace/.openhands/agents/family-experience-agent.yaml and work on family-oriented features and user experience for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
   operations-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: operations-agent
     volumes:
       - .:/workspace
@@ -55,14 +85,24 @@ services:
       - ~/.ssh:/root/.ssh:ro
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-    command: --config /workspace/.openhands/agents/operations-agent.yaml --workspace-dir /workspace --agent-name "Operations Specialist"
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - AGENT_CONFIG_FILE=/workspace/.openhands/agents/operations-agent.yaml
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+    command: python -m openhands.core.main -t "You are the Operations Specialist agent. Read your configuration from /workspace/.openhands/agents/operations-agent.yaml and work on monitoring, backup, and operational tasks for the Family Network Platform project."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
   monitor-agent:
-    image: ghcr.io/all-hands-ai/openhands:main
+    build:
+      context: .
+      dockerfile: Dockerfile.openhands
+    image: openhands-local:latest
     container_name: monitor-agent
     volumes:
       - .:/workspace
@@ -70,26 +110,31 @@ services:
       - ~/.ssh:/root/.ssh:ro
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-    command: --config /workspace/.openhands/agents/monitor-agent.yaml --workspace-dir /workspace --agent-name "Quality Assurance Monitor"
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - AGENT_CONFIG_FILE=/workspace/.openhands/agents/monitor-agent.yaml
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+      - RUNTIME=${RUNTIME}
+      - SANDBOX_VOLUMES=${SANDBOX_VOLUMES}
+    command: python -m openhands.core.main -t "You are the Quality Assurance Monitor agent. Read your configuration from /workspace/.openhands/agents/monitor-agent.yaml and monitor all other agents' work for quality and adherence to project principles."
     working_dir: /workspace
     restart: unless-stopped
     networks:
       - openhands-network
-
 networks:
   openhands-network:
     driver: bridge
-
 # Optional: Add monitoring and logging
 # Uncomment the following services if you want advanced monitoring
-
 #  portainer:
 #    image: portainer/portainer-ce:latest
 #    container_name: portainer
 #    ports:
 #      - "9000:9000"
 #    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
+#      - 
 #      - portainer_data:/data
 #    restart: unless-stopped
 #    networks:
@@ -99,11 +144,10 @@ networks:
 #    image: containrrr/watchtower
 #    container_name: watchtower
 #    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
+#      - 
 #    command: --interval 3600 --cleanup
 #    restart: unless-stopped
 #    networks:
 #      - openhands-network
-
 #volumes:
 #  portainer_data:

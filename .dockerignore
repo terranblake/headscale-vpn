@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.*
+
+# Docker files
+docker-compose*.yml
+Dockerfile*
+
+# Documentation
+README.md
+docs/
+
+# Logs
+*.log
+logs/
+
+# Node modules (if any)
+node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
