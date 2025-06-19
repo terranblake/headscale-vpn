@@ -11,6 +11,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/documentation-agent.yaml
       - SANDBOX_TYPE=local
       - WORKSPACE_BASE=/workspace
@@ -30,6 +31,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/infrastructure-agent.yaml
       - SANDBOX_TYPE=local
       - WORKSPACE_BASE=/workspace
@@ -49,6 +51,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/family-experience-agent.yaml
       - SANDBOX_TYPE=local
       - WORKSPACE_BASE=/workspace
@@ -68,6 +71,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/operations-agent.yaml
       - SANDBOX_TYPE=local
       - WORKSPACE_BASE=/workspace
@@ -87,6 +91,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
       - AGENT_CONFIG_FILE=/workspace/.openhands/agents/monitor-agent.yaml
       - SANDBOX_TYPE=local
       - WORKSPACE_BASE=/workspace
