@@ -88,21 +88,19 @@ build: ## Build custom Docker images
 rebuild: ## Rebuild custom Docker images without cache
 	@docker-compose build --no-cache
 
-# Chromecast integration
-deploy-chromecast-bridge: ## Deploy Chromecast bridge for Jellyfin
-	@echo "Deploying Chromecast bridge..."
-	@sudo ./scripts/deploy-chromecast-bridge.sh
+# Family user management
+create-user: ## Create new family user (usage: make create-user USER=alice)
+	@echo "Creating family user: $(USER)"
+	@docker exec headscale headscale users create $(USER)
 
-generate-device-qr: ## Generate device QR code (usage: make generate-device-qr USER_EMAIL=user@example.com DEVICE_NAME=device DEVICE_TYPE=mobile)
-	@echo "Generating device QR code..."
-	@python3 ./scripts/generate-device-qr.py $(USER_EMAIL) $(DEVICE_NAME) --device-type $(DEVICE_TYPE)
+generate-setup-config: ## Generate setup configuration for family member (usage: make generate-setup-config USER=alice)
+	@echo "Generating setup configuration for: $(USER)"
+	@./scripts/setup-smart-tailscale.sh $(USER)
 
-# Service discovery
-start-service-discovery: ## Start service discovery container
-	@echo "Starting service discovery..."
-	@docker-compose up -d service-discovery
+list-users: ## List all family users
+	@echo "Family users:"
+	@docker exec headscale headscale users list
 
-# Smart TV bridge
-start-tv-bridge: ## Start Smart TV bridge container
-	@echo "Starting Smart TV bridge..."
-	@docker-compose up -d smart-tv-bridge
+list-devices: ## List all connected devices
+	@echo "Connected devices:"
+	@docker exec headscale headscale nodes list
