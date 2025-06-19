@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  documentation-agent:
+    image: ghcr.io/all-hands-ai/openhands:main
+    container_name: documentation-agent
+    volumes:
+      - .:/workspace
+      - ~/.gitconfig:/root/.gitconfig:ro
+      - ~/.ssh:/root/.ssh:ro
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    command: --config /workspace/.openhands/agents/documentation-agent.yaml --workspace-dir /workspace --agent-name "Documentation Specialist"
+    working_dir: /workspace
+    restart: unless-stopped
+    networks:
+      - openhands-network
+
+  infrastructure-agent:
+    image: ghcr.io/all-hands-ai/openhands:main
+    container_name: infrastructure-agent
+    volumes:
+      - .:/workspace
+      - ~/.gitconfig:/root/.gitconfig:ro
+      - ~/.ssh:/root/.ssh:ro
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    command: --config /workspace/.openhands/agents/infrastructure-agent.yaml --workspace-dir /workspace --agent-name "Infrastructure Specialist"
+    working_dir: /workspace
+    restart: unless-stopped
+    networks:
+      - openhands-network
+
+  family-experience-agent:
+    image: ghcr.io/all-hands-ai/openhands:main
+    container_name: family-experience-agent
+    volumes:
+      - .:/workspace
+      - ~/.gitconfig:/root/.gitconfig:ro
+      - ~/.ssh:/root/.ssh:ro
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    command: --config /workspace/.openhands/agents/family-experience-agent.yaml --workspace-dir /workspace --agent-name "Family Experience Specialist"
+    working_dir: /workspace
+    restart: unless-stopped
+    networks:
+      - openhands-network
+
+  operations-agent:
+    image: ghcr.io/all-hands-ai/openhands:main
+    container_name: operations-agent
+    volumes:
+      - .:/workspace
+      - ~/.gitconfig:/root/.gitconfig:ro
+      - ~/.ssh:/root/.ssh:ro
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    command: --config /workspace/.openhands/agents/operations-agent.yaml --workspace-dir /workspace --agent-name "Operations Specialist"
+    working_dir: /workspace
+    restart: unless-stopped
+    networks:
+      - openhands-network
+
+  monitor-agent:
+    image: ghcr.io/all-hands-ai/openhands:main
+    container_name: monitor-agent
+    volumes:
+      - .:/workspace
+      - ~/.gitconfig:/root/.gitconfig:ro
+      - ~/.ssh:/root/.ssh:ro
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    command: --config /workspace/.openhands/agents/monitor-agent.yaml --workspace-dir /workspace --agent-name "Quality Assurance Monitor"
+    working_dir: /workspace
+    restart: unless-stopped
+    networks:
+      - openhands-network
+
+networks:
+  openhands-network:
+    driver: bridge
+
+# Optional: Add monitoring and logging
+# Uncomment the following services if you want advanced monitoring
+
+#  portainer:
+#    image: portainer/portainer-ce:latest
+#    container_name: portainer
+#    ports:
+#      - "9000:9000"
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#      - portainer_data:/data
+#    restart: unless-stopped
+#    networks:
+#      - openhands-network
+#
+#  watchtower:
+#    image: containrrr/watchtower
+#    container_name: watchtower
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    command: --interval 3600 --cleanup
+#    restart: unless-stopped
+#    networks:
+#      - openhands-network
+
+#volumes:
+#  portainer_data:
