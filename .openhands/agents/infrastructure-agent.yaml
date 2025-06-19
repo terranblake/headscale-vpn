@@ -5,7 +5,6 @@ agent:
   name: "Infrastructure Specialist"
   role: "infrastructure"
   specialization: "automation_and_testing"
-  enable_browsing: false
   
   # Primary responsibilities
   responsibilities:

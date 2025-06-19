@@ -5,7 +5,6 @@ agent:
   name: "Documentation Specialist"
   role: "documentation"
   specialization: "technical_writing"
-  enable_browsing: false
   
   # Primary responsibilities
   responsibilities:
