@@ -28,7 +28,7 @@ echo "Configuring tailscale to use Headscale server: ${HEADSCALE_URL}"
     --accept-routes \
     --accept-dns=false \
     --hostname="vpn-exit-node" \
-    --authkey="${HEADSCALE_API_KEY}" || {
+    --authkey="${HEADSCALE_PREAUTH_KEY}" || {
     
     echo "Authentication failed, trying manual registration..."
     echo "Please run the following command on your headscale server:"

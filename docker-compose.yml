@@ -76,7 +76,7 @@ services:
       - /dev/net/tun
     environment:
       - HEADSCALE_URL=http://headscale:8080
-      - HEADSCALE_API_KEY=${HEADSCALE_API_KEY}
+      - HEADSCALE_PREAUTH_KEY=${HEADSCALE_PREAUTH_KEY}
       - NORDVPN_USER=${NORDVPN_USER}
       - NORDVPN_PASS=${NORDVPN_PASS}
       - NORDVPN_SERVER=${NORDVPN_SERVER:-us}
@@ -105,7 +105,7 @@ services:
       - NET_ADMIN
     environment:
       - HEADSCALE_URL=http://headscale:8080
-      - HEADSCALE_API_KEY=${HEADSCALE_API_KEY}
+      - HEADSCALE_PREAUTH_KEY=${HEADSCALE_PREAUTH_KEY}
       - MITMPROXY_MODE=${MITMPROXY_MODE:-transparent}
       - MITMPROXY_PORT=${MITMPROXY_PORT:-8080}
     volumes:

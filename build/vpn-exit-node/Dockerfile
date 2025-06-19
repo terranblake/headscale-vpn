@@ -9,11 +9,6 @@ RUN apk add --no-cache git ca-certificates build-base linux-headers
 # Clone and build tailscale from source
 WORKDIR /src
 RUN git clone https://github.com/tailscale/tailscale.git .
-RUN git checkout v1.84.1  # Use a specific version that works with Go 1.21
-
-# Clone and build tailscale from source
-WORKDIR /src
-RUN git clone https://github.com/tailscale/tailscale.git .
 RUN git checkout $(git describe --tags --abbrev=0)  # Use latest stable tag
 
 # Build tailscaled and tailscale CLI

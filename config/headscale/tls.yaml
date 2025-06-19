@@ -1,0 +1,21 @@
+# TLS Configuration for Headscale
+# This file contains TLS-specific settings
+
+# TLS Certificate paths (when using custom certificates)
+tls_cert_path: /etc/headscale/tls/cert.pem
+tls_key_path: /etc/headscale/tls/key.pem
+
+# Let's Encrypt configuration (alternative to custom certs)
+lets_encrypt:
+  enabled: false
+  cache_dir: /var/lib/headscale/cache
+  email: admin@example.com
+  challenge_type: HTTP-01
+
+# TLS settings
+tls:
+  min_version: "1.2"
+  cipher_suites:
+    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256

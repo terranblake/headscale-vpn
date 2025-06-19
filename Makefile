@@ -63,3 +63,27 @@ proxy-status: ## Check proxy gateway status
 proxy-certs: ## Show proxy certificates location
 	@echo "Proxy certificates are in: ./data/proxy/certs/"
 	@docker exec proxy-gateway ls -la /root/.mitmproxy/
+
+# Testing and monitoring
+test: ## Run integration tests
+	@./tests/integration_test.sh
+
+health: ## Run health check
+	@./scripts/health-check.sh check
+
+monitor: ## Start continuous health monitoring
+	@./scripts/health-check.sh monitor
+
+# Backup and restore
+backup: ## Create backup
+	@./scripts/backup.sh
+
+restore: ## Restore from backup (usage: make restore BACKUP=backup-file.tar.gz)
+	@./scripts/restore.sh $(BACKUP)
+
+# Development
+build: ## Build custom Docker images
+	@docker-compose build
+
+rebuild: ## Rebuild custom Docker images without cache
+	@docker-compose build --no-cache
