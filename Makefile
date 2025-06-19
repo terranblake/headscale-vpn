@@ -87,3 +87,22 @@ build: ## Build custom Docker images
 
 rebuild: ## Rebuild custom Docker images without cache
 	@docker-compose build --no-cache
+
+# Chromecast integration
+deploy-chromecast-bridge: ## Deploy Chromecast bridge for Jellyfin
+	@echo "Deploying Chromecast bridge..."
+	@sudo ./scripts/deploy-chromecast-bridge.sh
+
+generate-device-qr: ## Generate device QR code (usage: make generate-device-qr USER_EMAIL=user@example.com DEVICE_NAME=device DEVICE_TYPE=mobile)
+	@echo "Generating device QR code..."
+	@python3 ./scripts/generate-device-qr.py $(USER_EMAIL) $(DEVICE_NAME) --device-type $(DEVICE_TYPE)
+
+# Service discovery
+start-service-discovery: ## Start service discovery container
+	@echo "Starting service discovery..."
+	@docker-compose up -d service-discovery
+
+# Smart TV bridge
+start-tv-bridge: ## Start Smart TV bridge container
+	@echo "Starting Smart TV bridge..."
+	@docker-compose up -d smart-tv-bridge
