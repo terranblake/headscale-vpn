@@ -1,0 +1,73 @@
+# OpenHands Agent Configuration for Family Network Platform
+# This file defines the project structure, tasks, and execution strategy
+
+project:
+  name: "Family Network Platform"
+  description: "Complete family network solution with secure, transparent access to home services"
+  version: "1.0.0"
+  repository: "https://github.com/terranblake/headscale-vpn"
+  
+  # Project type and domain
+  type: "infrastructure"
+  domain: "networking"
+  complexity: "high"
+  
+  # Target completion timeline
+  estimated_hours: 80
+  priority: "high"
+  
+  # Success criteria
+  success_criteria:
+    - "All core services deployed and functional"
+    - "Comprehensive documentation for all user types"
+    - "5-minute setup process for any device"
+    - "Production-grade security and monitoring"
+    - "Zero ongoing technical maintenance for family members"
+
+# Task execution strategy
+execution:
+  strategy: "sequential_with_dependencies"
+  parallel_tasks: false  # Due to infrastructure dependencies
+  validation_required: true
+  testing_required: true
+  documentation_required: true
+
+# Agent specialization requirements
+agent_requirements:
+  skills:
+    - "docker"
+    - "networking"
+    - "vpn"
+    - "linux_administration"
+    - "technical_writing"
+    - "yaml_configuration"
+    - "bash_scripting"
+    - "monitoring"
+    - "security"
+  
+  tools_needed:
+    - "str_replace_editor"
+    - "execute_bash"
+    - "execute_ipython_cell"
+  
+  knowledge_areas:
+    - "Headscale/Tailscale VPN technology"
+    - "Docker Compose orchestration"
+    - "SSL/TLS certificate management"
+    - "Prometheus/Grafana monitoring"
+    - "Family-friendly technical writing"
+
+# Quality gates
+quality_gates:
+  code_review: true
+  testing: true
+  documentation: true
+  security_review: true
+  user_experience_review: true
+
+# Communication preferences
+communication:
+  progress_updates: "after_each_phase"
+  error_reporting: "immediate"
+  completion_notification: "required"
+  documentation_style: "comprehensive"
