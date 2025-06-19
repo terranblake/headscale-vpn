@@ -9,5 +9,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Install Playwright browsers
+RUN python -m playwright install --with-deps chromium
+
 # Set the working directory
 WORKDIR /app
