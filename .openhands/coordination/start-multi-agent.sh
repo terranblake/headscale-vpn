@@ -47,7 +47,7 @@ setup_branches() {
     git checkout main
     
     # Create agent branches if they don't exist
-    for branch in agent/documentation agent/infrastructure agent/family-experience agent/operations; do
+    for branch in agent/documentation agent/infrastructure agent/family-experience agent/operations agent/monitor; do
         if git show-ref --verify --quiet refs/heads/$branch; then
             echo "Branch $branch already exists"
         else
@@ -170,6 +170,12 @@ show_agent_assignments() {
     echo "   - Security hardening"
     echo "   - Performance optimization"
     echo ""
+    echo "🔍 Monitor Agent (Branch: agent/monitor):"
+    echo "   - Quality assurance and oversight"
+    echo "   - Progress monitoring and reporting"
+    echo "   - Core principle compliance checking"
+    echo "   - Integration validation and alerts"
+    echo ""
 }
 
 # Main execution
@@ -197,6 +203,8 @@ main() {
     start_agent "family-experience"
     sleep 2
     start_agent "operations"
+    sleep 2
+    start_agent "monitor"
     
     echo ""
     echo "✅ All agents launched!"
@@ -224,7 +232,7 @@ case "${1:-start}" in
         ;;
     "status")
         echo "📊 Multi-Agent Status:"
-        for agent in documentation infrastructure family-experience operations; do
+        for agent in documentation infrastructure family-experience operations monitor; do
             echo ""
             echo "=== $agent Agent ==="
             if [[ -f "$COORDINATION_DIR/status/${agent}.log" ]]; then

@@ -288,6 +288,8 @@ execution_rules:
   - "Follow security best practices for all implementations"
   - "Create backup procedures for any data-modifying operations"
   - "Validate that family members can complete setup in under 10 minutes"
+  - "Monitor agent provides continuous oversight and quality assurance"
+  - "All agents must respond to monitor agent feedback and alerts"
 
 # Quality checkpoints
 quality_checkpoints:
@@ -295,12 +297,14 @@ quality_checkpoints:
     - "Verify all files are created and functional"
     - "Test procedures work as documented"
     - "Check documentation clarity and completeness"
+    - "Run quality audit to check for principle violations"
   
   after_each_phase:
     - "Run integration tests"
     - "Validate user experience flows"
     - "Review security implications"
     - "Update project documentation"
+    - "Generate progress report and milestone validation"
   
   before_completion:
     - "Full end-to-end testing"
