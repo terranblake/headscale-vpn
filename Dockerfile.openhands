@@ -2,14 +2,12 @@
 FROM ghcr.io/all-hands-ai/openhands:main
 
 # Install tmux and other dependencies required for local runtime
+# Keep running as root since OpenHands entrypoint requires it
 USER root
 RUN apt-get update && \
     apt-get install -y tmux && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-# Switch back to the original user
-USER openhands
 
 # Set the working directory
 WORKDIR /app
