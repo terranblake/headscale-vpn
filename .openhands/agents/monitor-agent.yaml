@@ -5,6 +5,7 @@ agent:
   name: "Quality Assurance & Progress Monitor"
   role: "monitor"
   specialization: "quality_assurance_and_oversight"
+  enable_browsing: false
   
   # Primary responsibilities
   responsibilities:

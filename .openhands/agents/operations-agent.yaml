@@ -5,6 +5,7 @@ agent:
   name: "Operations Specialist"
   role: "operations"
   specialization: "monitoring_security_and_maintenance"
+  enable_browsing: false
   
   # Primary responsibilities
   responsibilities:

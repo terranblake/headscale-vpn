@@ -5,6 +5,7 @@ agent:
   name: "Family Experience Specialist"
   role: "family_experience"
   specialization: "user_experience_and_onboarding"
+  enable_browsing: false
   
   # Primary responsibilities
   responsibilities:
