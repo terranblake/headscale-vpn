@@ -1,5 +1,7 @@
 deployment:
   replicas: 1
+  strategy:
+    type: Recreate
 
 # Security context for binding to privileged ports with hostNetwork
 podSecurityContext:
