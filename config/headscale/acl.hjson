@@ -1,5 +1,5 @@
 {
-  "policy": "v2",
+  "policy": "v1",
 
   "nodeAttrs": [
     { "target": ["group:admin"],       "attr": ["funnel"] },
@@ -7,12 +7,12 @@
     { "target": ["group:proxy-nodes"], "attr": ["proxy"] }
   ],
 
-  "groups": [
-    { "name": "admin",       "members": ["admin@headscale.local"] },
-    { "name": "devices",     "members": ["user1@headscale.local", "user2@headscale.local"] },
-    { "name": "exit-nodes",  "members": ["vpn-exit-node@headscale.local"] },
-    { "name": "proxy-nodes", "members": ["proxy-gateway@headscale.local"] }
-  ],
+  "groups": {
+    "admin":       ["admin@headscale.local"],
+    "devices":     ["user1@headscale.local", "user2@headscale.local"],
+    "exit-nodes":  ["vpn-exit-node@headscale.local"],
+    "proxy-nodes": ["proxy-gateway@headscale.local"]
+  },
 
   "hosts": {
     "home-network":   "192.168.1.0/24",
