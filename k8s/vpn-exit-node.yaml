@@ -64,7 +64,7 @@ spec:
         - name: TS_HOSTNAME
           value: "vpn-exit-node"
         - name: TS_EXTRA_ARGS
-          value: "--login-server=http://headscale.headscale-vpn.svc.cluster.local:8080 --advertise-exit-node --accept-routes=false --accept-dns=false"
+          value: "--login-server=http://10.43.75.156:8080 --advertise-exit-node --accept-routes=false --accept-dns=false"
         - name: TS_USERSPACE
           value: "true"
         - name: TS_ACCEPT_DNS
