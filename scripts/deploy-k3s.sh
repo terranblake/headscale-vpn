@@ -514,7 +514,6 @@ main() {
     deploy_storage
     deploy_database
     deploy_headscale
-    build_vpn_exit_image
     deploy_vpn_exit
     deploy_ingress
     health_check
