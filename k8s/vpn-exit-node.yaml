@@ -31,6 +31,8 @@ spec:
           value: "1280"
         - name: DNS_KEEP_NAMESERVER
           value: "on"
+        - name: DNS_ADDRESS
+          value: "10.43.0.10"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
