@@ -330,17 +330,17 @@ deploy_vpn_exit() {
         k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale users create vpn-admin
     fi
     
-    # Generate Headscale auth key for the exit node
-    log_info "Generating auth key for VPN exit node..."
+    # Generate Headscale preauth key for the exit node
+    log_info "Generating preauth key for VPN exit node..."
     local auth_key
-    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale apikeys create --expiration 24h)
+    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user 1 --expiration 24h --reusable | grep -o '[a-f0-9]\{64\}')
     
     if [[ -z "$auth_key" ]]; then
-        log_error "Failed to generate auth key for VPN exit node"
+        log_error "Failed to generate preauth key for VPN exit node"
         exit 1
     fi
     
-    log_info "Generated auth key for VPN exit node"
+    log_info "Generated preauth key for VPN exit node"
     
     # Create headscale-secrets if it doesn't exist
     if ! k3s kubectl get secret headscale-secrets -n headscale-vpn >/dev/null 2>&1; then
@@ -428,7 +428,7 @@ deploy_ingress() {
     
     # Health check: Verify Traefik can route to services
     log_info "Testing ingress health..."
-    local retries=10
+    local retries=2
     while [[ $retries -gt 0 ]]; do
         if k3s kubectl get ingress -n headscale-vpn headscale-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null | grep -q .; then
             log_success "Ingress health check passed"
