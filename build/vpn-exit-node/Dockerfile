@@ -1,7 +1,7 @@
 # VPN Exit Node - Routes mesh traffic through commercial VPN
 # Built from source using open-source tailscaled
 
-FROM golang:1.21-alpine AS tailscale-builder
+FROM golang:1.23-alpine AS tailscale-builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates build-base linux-headers
@@ -9,7 +9,7 @@ RUN apk add --no-cache git ca-certificates build-base linux-headers
 # Clone and build tailscale from source
 WORKDIR /src
 RUN git clone https://github.com/tailscale/tailscale.git .
-RUN git checkout $(git describe --tags --abbrev=0)  # Use latest stable tag
+RUN git checkout v1.76.6  # Use stable version compatible with Go 1.23
 
 # Build tailscaled and tailscale CLI
 RUN go mod download
