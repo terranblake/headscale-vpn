@@ -1,17 +1,17 @@
 {
-  "policy": "v1",
-
+  // no "policy": "v2" here
   "nodeAttrs": [
     { "target": ["group:admin"],       "attr": ["funnel"] },
     { "target": ["group:exit-nodes"],  "attr": ["exit-node"] },
     { "target": ["group:proxy-nodes"], "attr": ["proxy"] }
   ],
 
+  /* --- THIS is the bit that must be a map --- */
   "groups": {
-    "admin":       ["admin@headscale.local"],
-    "devices":     ["user1@headscale.local", "user2@headscale.local"],
-    "exit-nodes":  ["vpn-exit-node@headscale.local"],
-    "proxy-nodes": ["proxy-gateway@headscale.local"]
+    "group:admin":       ["admin@headscale.local"],
+    "group:devices":     ["user1@headscale.local", "user2@headscale.local"],
+    "group:exit-nodes":  ["vpn-exit-node@headscale.local"],
+    "group:proxy-nodes": ["proxy-gateway@headscale.local"]
   },
 
   "hosts": {
