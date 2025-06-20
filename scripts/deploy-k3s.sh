@@ -333,7 +333,7 @@ deploy_vpn_exit() {
     # Generate Headscale auth key for the exit node
     log_info "Generating auth key for VPN exit node..."
     local auth_key
-    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale apikeys create --user vpn-admin --expiration 24h)
+    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale apikeys create --expiration 24h)
     
     if [[ -z "$auth_key" ]]; then
         log_error "Failed to generate auth key for VPN exit node"
