@@ -111,8 +111,5 @@ spec:
       - name: vpn-config
         secret:
           secretName: vpn-exit-secrets
-      - name: tailscale-config
-        configMap:
-          name: tailscale-config
       nodeSelector:
         kubernetes.io/os: linux
