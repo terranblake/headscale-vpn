@@ -469,6 +469,21 @@ setup_storage() {
     log_success "Storage provisioner configured"
 }
 
+# Configure Traefik with Let's Encrypt and host networking
+configure_traefik() {
+    log_info "Configuring Traefik with Let's Encrypt and host networking..."
+    
+    k3s kubectl apply -f k8s/traefik-config.yaml
+    
+    log_info "Waiting for Traefik to reconfigure..."
+    sleep 30
+    
+    # Wait for Traefik to restart with new configuration
+    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=120s
+    
+    log_info "Traefik configured successfully"
+}
+
 # Health check
 health_check() {
     log_info "Performing health check..."
@@ -528,6 +543,7 @@ main() {
     deploy_headscale
     deploy_vpn_exit
     deploy_ingress
+    configure_traefik
     health_check
     display_access_info
     
