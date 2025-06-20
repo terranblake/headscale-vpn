@@ -171,10 +171,16 @@ deploy_configmap() {
         -n headscale-vpn \
         --dry-run=client -o yaml | k3s kubectl apply -f -
     
+    # Create configmap for VPN exit node config
+    k3s kubectl create configmap vpn-exit-config \
+        --from-file="$CONFIG_DIR/vpn-exit/" \
+        -n headscale-vpn \
+        --dry-run=client -o yaml | k3s kubectl apply -f -
+    
     # Cleanup
     rm -rf "$temp_config_dir"
     
-    log_success "Configmap deployed from actual config files with environment substitution"
+    log_success "Configmaps deployed from actual config files"
 }
 
 # Deploy storage
