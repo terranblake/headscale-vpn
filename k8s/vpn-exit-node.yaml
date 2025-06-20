@@ -25,6 +25,10 @@ spec:
           value: "custom"
         - name: VPN_TYPE
           value: "wireguard"
+        - name: DOT
+          value: "off"
+        - name: DNS_KEEP_NAMESERVER
+          value: "on"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
