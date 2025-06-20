@@ -1,5 +1,18 @@
 deployment:
   replicas: 1
+
+# Security context for binding to privileged ports with hostNetwork
+securityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+  runAsGroup: 0
+
+podSecurityContext:
+  allowPrivilegeEscalation: true
+  capabilities:
+    add:
+      - NET_BIND_SERVICE
+    drop: []
   
 service:
   type: ClusterIP
