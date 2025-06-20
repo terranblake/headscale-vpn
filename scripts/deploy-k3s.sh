@@ -336,8 +336,14 @@ deploy_vpn_exit() {
     
     log_info "Generated auth key for VPN exit node"
     
-    # Update the secret with the auth key
-    k3s kubectl patch secret headscale-secrets -n headscale-vpn --type='merge' -p="{\"data\":{\"headscale-authkey\":\"$(echo -n "$auth_key" | base64 -w 0)\"}}"
+    # Create headscale-secrets if it doesn't exist
+    if ! k3s kubectl get secret headscale-secrets -n headscale-vpn >/dev/null 2>&1; then
+        k3s kubectl create secret generic headscale-secrets -n headscale-vpn \
+            --from-literal=headscale-authkey="$auth_key"
+    else
+        # Update the secret with the auth key
+        k3s kubectl patch secret headscale-secrets -n headscale-vpn --type='merge' -p="{\"data\":{\"headscale-authkey\":\"$(echo -n "$auth_key" | base64 -w 0)\"}}"
+    fi
     
     # Deploy the VPN exit node
     k3s kubectl apply -f "$K8S_DIR/vpn-exit-node.yaml"
