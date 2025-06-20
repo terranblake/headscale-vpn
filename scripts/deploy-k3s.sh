@@ -333,7 +333,7 @@ deploy_vpn_exit() {
     # Generate Headscale preauth key for the exit node
     log_info "Generating preauth key for VPN exit node..."
     local auth_key
-    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user 1 --expiration 24h --reusable | grep -o '[a-f0-9]\{64\}')
+    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user 1 --expiration 24h --reusable | grep -o '[a-f0-9]\{32\}')
     
     if [[ -z "$auth_key" ]]; then
         log_error "Failed to generate preauth key for VPN exit node"
