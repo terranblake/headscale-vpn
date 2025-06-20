@@ -2,12 +2,12 @@ deployment:
   replicas: 1
 
 # Security context for binding to privileged ports with hostNetwork
-securityContext:
+podSecurityContext:
   runAsNonRoot: false
   runAsUser: 0
   runAsGroup: 0
 
-podSecurityContext:
+securityContext:
   allowPrivilegeEscalation: true
   capabilities:
     add:
