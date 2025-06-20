@@ -13,18 +13,18 @@ spec:
       labels:
         app: vpn-exit-node
     spec:
-      # dnsPolicy: None
-      # dnsConfig:
-      #   nameservers:
-      #     - "10.43.0.10"  # Cluster DNS
-      #   searches:
-      #     - "headscale-vpn.svc.cluster.local"
-      #     - "svc.cluster.local"
-      #     - "cluster.local"
-      #   options:
-      #     - name: ndots
-      #       value: "2"
-      #     - name: edns0
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - "10.43.0.10"  # Cluster DNS
+        searches:
+          - "headscale-vpn.svc.cluster.local"
+          - "svc.cluster.local"
+          - "cluster.local"
+        options:
+          - name: ndots
+            value: "2"
+          - name: edns0
       containers:
       - name: gluetun
         image: qmcgaw/gluetun
@@ -39,6 +39,8 @@ spec:
           value: "wireguard"
         - name: FIREWALL_OUTBOUND_SUBNETS
           value: "10.42.0.0/16,10.43.0.0/16,100.64.0.0/10"
+        - name: WIREGUARD_MTU
+          value: "1280"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
