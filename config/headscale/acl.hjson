@@ -1,17 +1,18 @@
 {
-  // no "policy": "v2" here
-  "nodeAttrs": [
-    { "target": ["group:admin"],       "attr": ["funnel"] },
-    { "target": ["group:exit-nodes"],  "attr": ["exit-node"] },
-    { "target": ["group:proxy-nodes"], "attr": ["proxy"] }
-  ],
-
-  /* --- THIS is the bit that must be a map --- */
+  // Groups define collections of users
   "groups": {
     "group:admin":       ["admin@headscale.local"],
     "group:devices":     ["user1@headscale.local", "user2@headscale.local"],
     "group:exit-nodes":  ["vpn-exit-node@headscale.local"],
     "group:proxy-nodes": ["proxy-gateway@headscale.local"]
+  },
+
+  // Tags and their owners - this is where we define who can assign tags
+  "tagOwners": {
+    "tag:device":      ["group:admin", "group:devices"],
+    "tag:exit-node":   ["group:admin", "group:exit-nodes"],
+    "tag:proxy-node":  ["group:admin", "group:proxy-nodes"],
+    "tag:ssh-target":  ["group:admin"]  // Admin can tag nodes as SSH targets
   },
 
   "hosts": {
@@ -23,29 +24,51 @@
   },
 
   "acls": [
+    // Admin has full access
     { "action": "accept", "src": ["group:admin"],      "dst": ["*:*"] },
+    
+    // Device users can access other devices
+    { "action": "accept", "src": ["group:devices"],    "dst": ["tag:device:*"] },
     { "action": "accept", "src": ["group:devices"],    "dst": ["group:devices:*"] },
+    
+    // Device users can access exit nodes
+    { "action": "accept", "src": ["group:devices"],    "dst": ["tag:exit-node:*"] },
     { "action": "accept", "src": ["group:devices"],    "dst": ["group:exit-nodes:*"] },
+    
+    // Device users can access proxy nodes on specific ports
+    { "action": "accept", "src": ["group:devices"],    "dst": ["tag:proxy-node:8080,8443"] },
     { "action": "accept", "src": ["group:devices"],    "dst": ["group:proxy-nodes:8080,8443"] },
+    
+    // Exit nodes can access external services
     { "action": "accept", "src": ["group:exit-nodes"], "dst": ["*:8080,50443"] },
+    { "action": "accept", "src": ["tag:exit-node"],    "dst": ["*:8080,50443"] },
+    
+    // Proxy nodes can access external services
     { "action": "accept", "src": ["group:proxy-nodes"],"dst": ["*:8080,50443"] },
+    { "action": "accept", "src": ["tag:proxy-node"],   "dst": ["*:8080,50443"] },
+    
+    // DNS access for everyone
     { "action": "accept", "src": ["*"],                "dst": ["*:53"] },
+    
+    // Additional proxy access for devices
+    { "action": "accept", "src": ["group:devices"],    "dst": ["tag:proxy-node:80,443,8080,8443"] },
     { "action": "accept", "src": ["group:devices"],    "dst": ["group:proxy-nodes:80,443,8080,8443"] }
   ],
 
   "autoApprovers": {
-    "exitNode": ["group:exit-nodes"],
+    "exitNode": ["group:exit-nodes", "tag:exit-node"],
     "routes": {
-      "192.168.1.0/24": ["group:exit-nodes"],
-      "172.20.0.0/16":  ["group:exit-nodes", "group:proxy-nodes"]
+      "192.168.1.0/24": ["group:exit-nodes", "tag:exit-node"],
+      "172.20.0.0/16":  ["group:exit-nodes", "group:proxy-nodes", "tag:exit-node", "tag:proxy-node"]
     }
   },
 
+  // SSH rules using tags - this works!
   "ssh": [
     {
       "action": "accept",
       "src":  ["group:admin"],
-      "dst":  ["group:devices", "group:exit-nodes", "group:proxy-nodes"],
+      "dst":  ["tag:ssh-target"],
       "users":["root", "ubuntu", "tailscale"]
     }
   ]
