@@ -152,13 +152,29 @@ deploy_secrets() {
 deploy_configmap() {
     log_info "Deploying configmap from actual config files..."
     
-    # Create configmap from the actual headscale config file
+    # Create temporary directory for processed config files
+    local temp_config_dir="/tmp/headscale-config-processed"
+    rm -rf "$temp_config_dir"
+    mkdir -p "$temp_config_dir"
+    
+    # Copy config files and substitute environment variables
+    for file in "$CONFIG_DIR/headscale"/*; do
+        if [[ -f "$file" ]]; then
+            local filename=$(basename "$file")
+            envsubst < "$file" > "$temp_config_dir/$filename"
+        fi
+    done
+    
+    # Create configmap from processed files
     k3s kubectl create configmap headscale-config \
-        --from-file="$CONFIG_DIR/headscale/" \
+        --from-file="$temp_config_dir/" \
         -n headscale-vpn \
         --dry-run=client -o yaml | k3s kubectl apply -f -
     
-    log_success "Configmap deployed from actual config files"
+    # Cleanup
+    rm -rf "$temp_config_dir"
+    
+    log_success "Configmap deployed from actual config files with environment substitution"
 }
 
 # Deploy storage
