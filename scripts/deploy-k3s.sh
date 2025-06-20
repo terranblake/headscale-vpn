@@ -324,10 +324,16 @@ deploy_vpn_exit() {
         -n headscale-vpn \
         --dry-run=client -o yaml | k3s kubectl apply -f -
     
+    # Create user if it doesn't exist
+    log_info "Creating headscale user..."
+    if ! k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale users list | grep -q "vpn-admin"; then
+        k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale users create vpn-admin
+    fi
+    
     # Generate Headscale auth key for the exit node
     log_info "Generating auth key for VPN exit node..."
     local auth_key
-    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale apikeys create --expiration 24h)
+    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale apikeys create --user vpn-admin --expiration 24h)
     
     if [[ -z "$auth_key" ]]; then
         log_error "Failed to generate auth key for VPN exit node"
@@ -379,7 +385,7 @@ deploy_vpn_exit() {
     local log_pid=$!
     
     # Wait for the container to be ready (may take time for Tailscale auth)
-    retries=60  # 10 minutes timeout
+    retries=2  # 10 minutes timeout
     while [[ $retries -gt 0 ]]; do
         local pod_status
         pod_status=$(k3s kubectl get pod "$pod_name" -n headscale-vpn -o jsonpath='{.status.phase}' 2>/dev/null)
@@ -398,7 +404,7 @@ deploy_vpn_exit() {
         fi
         
         log_warning "VPN exit node still starting... ($retries attempts left, status: $pod_status)"
-        sleep 10
+        sleep 5
         ((retries--))
     done
     
