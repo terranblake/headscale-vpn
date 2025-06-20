@@ -1,1 +1,52 @@
-headscale-c67587b79-85jlk
+{
+  "policy": "v2",
+
+  "nodeAttrs": [
+    { "target": ["group:admin"],       "attr": ["funnel"] },
+    { "target": ["group:exit-nodes"],  "attr": ["exit-node"] },
+    { "target": ["group:proxy-nodes"], "attr": ["proxy"] }
+  ],
+
+  "groups": [
+    { "name": "admin",       "members": ["admin@headscale.local"] },
+    { "name": "devices",     "members": ["user1@headscale.local", "user2@headscale.local"] },
+    { "name": "exit-nodes",  "members": ["vpn-exit-node@headscale.local"] },
+    { "name": "proxy-nodes", "members": ["proxy-gateway@headscale.local"] }
+  ],
+
+  "hosts": {
+    "home-network":   "192.168.1.0/24",
+    "docker-network": "172.20.0.0/16",
+    "private-class-a":"10.0.0.0/8",
+    "private-class-b":"172.16.0.0/12",
+    "private-class-c":"192.168.0.0/16"
+  },
+
+  "acls": [
+    { "action": "accept", "src": ["group:admin"],      "dst": ["*:*"] },
+    { "action": "accept", "src": ["group:devices"],    "dst": ["group:devices:*"] },
+    { "action": "accept", "src": ["group:devices"],    "dst": ["group:exit-nodes:*"] },
+    { "action": "accept", "src": ["group:devices"],    "dst": ["group:proxy-nodes:8080,8443"] },
+    { "action": "accept", "src": ["group:exit-nodes"], "dst": ["*:8080,50443"] },
+    { "action": "accept", "src": ["group:proxy-nodes"],"dst": ["*:8080,50443"] },
+    { "action": "accept", "src": ["*"],                "dst": ["*:53"] },
+    { "action": "accept", "src": ["group:devices"],    "dst": ["group:proxy-nodes:80,443,8080,8443"] }
+  ],
+
+  "autoApprovers": {
+    "exitNode": ["group:exit-nodes"],
+    "routes": {
+      "192.168.1.0/24": ["group:exit-nodes"],
+      "172.20.0.0/16":  ["group:exit-nodes", "group:proxy-nodes"]
+    }
+  },
+
+  "ssh": [
+    {
+      "action": "accept",
+      "src":  ["group:admin"],
+      "dst":  ["group:devices", "group:exit-nodes", "group:proxy-nodes"],
+      "users":["root", "ubuntu", "tailscale"]
+    }
+  ]
+}
