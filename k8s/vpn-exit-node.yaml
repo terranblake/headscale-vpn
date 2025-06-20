@@ -62,6 +62,7 @@ spec:
             cpu: "100m"
       - name: tailscale
         image: tailscale/tailscale
+        networkMode: container:gluetun
         env:
         - name: TS_AUTHKEY
           valueFrom:
@@ -84,6 +85,7 @@ spec:
           capabilities:
             add:
             - NET_ADMIN
+            - NET_RAW
         volumeMounts:
         - name: vpn-exit-data
           mountPath: /var/lib/tailscale
