@@ -25,6 +25,11 @@ spec:
           value: "custom"
         - name: VPN_TYPE
           value: "wireguard"
+        - name: FIREWALL_OUTBOUND_SUBNETS
+          value: "10.42.0.0/16,10.43.0.0/16,172.17.0.0/16"
+        - name: FIREWALL_OUTBOUND_SUBNETS
+          value: "10.42.0.0/16,10.43.0.0/16,100.64.0.0/10"
+          value: "8888"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
@@ -58,7 +63,11 @@ spec:
         - name: TS_EXTRA_ARGS
           value: "--login-server=http://headscale.headscale-vpn.svc.cluster.local:8080 --advertise-exit-node --accept-routes=false --accept-dns=false"
         - name: TS_USERSPACE
+          value: "true"
+        - name: TS_ACCEPT_DNS
           value: "false"
+        - name: TS_KUBE_SECRET
+          value: ""
         securityContext:
           capabilities:
             add:
