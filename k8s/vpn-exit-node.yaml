@@ -29,6 +29,8 @@ spec:
           value: "off"
         - name: DNS_KEEP_NAMESERVER
           value: "on"
+        - name: FIREWALL_OUTBOUND_SUBNETS
+          value: "10.42.0.0/16,10.43.0.0/16,172.17.0.0/16"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
