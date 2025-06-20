@@ -71,8 +71,16 @@ spec:
               key: headscale-authkey
         - name: TS_STATE_DIR
           value: "/var/lib/tailscale"
-        command: ["/usr/local/bin/tailscaled"]
-        args: ["--config=/etc/tailscale/tailscaled.conf", "--socket=/var/run/tailscale/tailscaled.sock"]
+        - name: TS_HOSTNAME
+          value: "vpn-exit-node"
+        - name: TS_EXTRA_ARGS
+          value: "--login-server=http://headscale.headscale-vpn.svc.cluster.local:8080 --advertise-exit-node --accept-routes=false --accept-dns=false"
+        - name: TS_USERSPACE
+          value: "true"
+        - name: TS_ACCEPT_DNS
+          value: "false"
+        - name: TS_KUBE_SECRET
+          value: ""
         securityContext:
           capabilities:
             add:
@@ -83,9 +91,6 @@ spec:
           mountPath: /var/lib/tailscale
         - name: tun-device
           mountPath: /dev/net/tun
-        - name: tailscale-config
-          mountPath: /etc/tailscale
-          readOnly: true
         resources:
           requests:
             memory: "64Mi"
