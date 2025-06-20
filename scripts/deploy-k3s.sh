@@ -324,13 +324,6 @@ deploy_vpn_exit() {
         -n headscale-vpn \
         --dry-run=client -o yaml | k3s kubectl apply -f -
     
-    # Create Tailscale config ConfigMap
-    log_info "Creating Tailscale config ConfigMap..."
-    k3s kubectl create configmap tailscale-config \
-        --from-file=tailscaled.conf="$CONFIG_DIR/tailscale/tailscaled.conf" \
-        -n headscale-vpn \
-        --dry-run=client -o yaml | k3s kubectl apply -f -
-    
     # Generate Headscale auth key for the exit node
     log_info "Generating auth key for VPN exit node..."
     local auth_key
