@@ -3,7 +3,7 @@
 # https://headscale.net/ref/configuration/
 
 # The server's URL (this will be used by clients to connect)
-server_url: http://0.0.0.0:8080
+server_url: http://headscale.headscale-vpn.svc.cluster.local:8080
 
 # Address and port to listen on
 listen_addr: 0.0.0.0:8080
