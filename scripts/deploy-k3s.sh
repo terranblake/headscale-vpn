@@ -169,7 +169,7 @@ deploy_database() {
     
     # Wait for database to be ready
     log_info "Waiting for database to be ready..."
-    k3s kubectl wait --for=condition=ready pod -l app=postgres -n headscale-vpn --timeout=300s
+    k3s kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=300s
     
     log_success "Database deployed and ready"
 }
