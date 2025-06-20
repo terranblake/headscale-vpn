@@ -159,7 +159,29 @@ deploy_configmap() {
 deploy_storage() {
     log_info "Deploying storage..."
     k3s kubectl apply -f "$K8S_DIR/storage.yaml"
-    log_success "Storage deployed"
+    
+    # Health check: Ensure all PVCs are bound
+    log_info "Waiting for PVCs to be bound..."
+    local retries=30
+    while [[ $retries -gt 0 ]]; do
+        local pending_pvcs
+        pending_pvcs=$(k3s kubectl get pvc -n headscale-vpn --field-selector=status.phase=Pending -o name 2>/dev/null | wc -l)
+        if [[ $pending_pvcs -eq 0 ]]; then
+            log_success "All PVCs are bound"
+            break
+        fi
+        log_warning "Waiting for PVCs to bind... ($pending_pvcs pending, $retries attempts left)"
+        sleep 5
+        ((retries--))
+    done
+    
+    if [[ $retries -eq 0 ]]; then
+        log_error "PVC binding failed"
+        k3s kubectl get pvc -n headscale-vpn
+        exit 1
+    fi
+    
+    log_success "Storage deployed and healthy"
 }
 
 # Deploy database
@@ -171,7 +193,25 @@ deploy_database() {
     log_info "Waiting for database to be ready..."
     k3s kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=300s
     
-    log_success "Database deployed and ready"
+    # Health check: Test database connection
+    log_info "Testing database connection..."
+    local retries=10
+    while [[ $retries -gt 0 ]]; do
+        if k3s kubectl exec -n headscale-vpn deployment/headscale-db -- pg_isready -U headscale -d headscale; then
+            log_success "Database connection test passed"
+            break
+        fi
+        log_warning "Database connection test failed, retrying... ($retries attempts left)"
+        sleep 5
+        ((retries--))
+    done
+    
+    if [[ $retries -eq 0 ]]; then
+        log_error "Database health check failed"
+        exit 1
+    fi
+    
+    log_success "Database deployed and healthy"
 }
 
 # Deploy headscale
@@ -191,7 +231,25 @@ deploy_headscale() {
     log_info "Waiting for Headscale to be ready..."
     k3s kubectl wait --for=condition=ready pod -l app=headscale -n headscale-vpn --timeout=300s
     
-    log_success "Headscale deployed and ready"
+    # Health check: Test Headscale API
+    log_info "Testing Headscale API health..."
+    local retries=10
+    while [[ $retries -gt 0 ]]; do
+        if k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale namespaces list >/dev/null 2>&1; then
+            log_success "Headscale API health check passed"
+            break
+        fi
+        log_warning "Headscale API health check failed, retrying... ($retries attempts left)"
+        sleep 10
+        ((retries--))
+    done
+    
+    if [[ $retries -eq 0 ]]; then
+        log_error "Headscale health check failed"
+        exit 1
+    fi
+    
+    log_success "Headscale deployed and healthy"
 }
 
 # Deploy VPN exit node
@@ -203,7 +261,26 @@ deploy_vpn_exit() {
     log_info "Waiting for VPN exit node to be ready..."
     k3s kubectl wait --for=condition=ready pod -l app=vpn-exit-node -n headscale-vpn --timeout=300s
     
-    log_success "VPN exit node deployed and ready"
+    # Health check: Check Tailscale status
+    log_info "Testing VPN exit node health..."
+    local retries=10
+    while [[ $retries -gt 0 ]]; do
+        local pod_name
+        pod_name=$(k3s kubectl get pods -l app=vpn-exit-node -n headscale-vpn -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+        if [[ -n "$pod_name" ]] && k3s kubectl exec -n headscale-vpn "$pod_name" -- tailscale status >/dev/null 2>&1; then
+            log_success "VPN exit node health check passed"
+            break
+        fi
+        log_warning "VPN exit node health check failed, retrying... ($retries attempts left)"
+        sleep 10
+        ((retries--))
+    done
+    
+    if [[ $retries -eq 0 ]]; then
+        log_warning "VPN exit node health check failed (this may be expected if not fully configured)"
+    fi
+    
+    log_success "VPN exit node deployed"
 }
 
 # Deploy ingress
@@ -212,6 +289,23 @@ deploy_ingress() {
     
     # Substitute environment variables in ingress.yaml
     envsubst < "$K8S_DIR/ingress.yaml" | k3s kubectl apply -f -
+    
+    # Health check: Verify Traefik can route to services
+    log_info "Testing ingress health..."
+    local retries=10
+    while [[ $retries -gt 0 ]]; do
+        if k3s kubectl get ingress -n headscale-vpn headscale-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null | grep -q .; then
+            log_success "Ingress health check passed"
+            break
+        fi
+        log_warning "Ingress health check failed, retrying... ($retries attempts left)"
+        sleep 5
+        ((retries--))
+    done
+    
+    if [[ $retries -eq 0 ]]; then
+        log_warning "Ingress health check failed (this may be expected in some environments)"
+    fi
     
     log_success "Ingress deployed"
 }
