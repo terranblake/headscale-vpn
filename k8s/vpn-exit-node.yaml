@@ -13,6 +13,18 @@ spec:
       labels:
         app: vpn-exit-node
     spec:
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - "10.43.0.10"  # Cluster DNS
+        searches:
+          - "headscale-vpn.svc.cluster.local"
+          - "svc.cluster.local"
+          - "cluster.local"
+        options:
+          - name: ndots
+            value: "2"
+          - name: edns0
       containers:
       - name: gluetun
         image: qmcgaw/gluetun
