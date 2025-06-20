@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vpn-exit-node
+  namespace: headscale-vpn
+spec:
+  selector:
+    matchLabels:
+      app: vpn-exit-node
+  template:
+    metadata:
+      labels:
+        app: vpn-exit-node
+    spec:
+      hostNetwork: true
+      containers:
+      - name: vpn-exit-node
+        image: headscale-vpn/vpn-exit-node:latest
+        imagePullPolicy: Never
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_MODULE
+        env:
+        - name: HEADSCALE_URL
+          value: "http://headscale.headscale-vpn.svc.cluster.local:8080"
+        - name: HEADSCALE_PREAUTH_KEY
+          value: "${HEADSCALE_PREAUTH_KEY}"
+        - name: NORDVPN_USER
+          valueFrom:
+            secretKeyRef:
+              name: headscale-secrets
+              key: nordvpn-user
+        - name: NORDVPN_PASS
+          valueFrom:
+            secretKeyRef:
+              name: headscale-secrets
+              key: nordvpn-pass
+        - name: NORDVPN_SERVER
+          value: "${NORDVPN_SERVER:-us}"
+        - name: BYPASS_DOMAINS
+          value: "${BYPASS_DOMAINS:-}"
+        - name: BYPASS_IPS
+          value: "${BYPASS_IPS:-}"
+        volumeMounts:
+        - name: vpn-exit-data
+          mountPath: /var/lib/tailscale
+        - name: tun-device
+          mountPath: /dev/net/tun
+        - name: vpn-config
+          mountPath: /etc/vpn-config
+          readOnly: true
+      volumes:
+      - name: vpn-exit-data
+        persistentVolumeClaim:
+          claimName: vpn-exit-data-pvc
+      - name: tun-device
+        hostPath:
+          path: /dev/net/tun
+      - name: vpn-config
+        configMap:
+          name: vpn-exit-config
+      nodeSelector:
+        kubernetes.io/os: linux

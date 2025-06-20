@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headscale-db
+  namespace: headscale-vpn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: headscale-db
+  template:
+    metadata:
+      labels:
+        app: headscale-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_DB
+          value: headscale
+        - name: POSTGRES_USER
+          value: headscale
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: headscale-secrets
+              key: postgres-password
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - headscale
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - headscale
+          initialDelaySeconds: 30
+          periodSeconds: 30
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: headscale-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: headscale-db
+  namespace: headscale-vpn
+spec:
+  selector:
+    app: headscale-db
+  ports:
+  - port: 5432
+    targetPort: 5432
