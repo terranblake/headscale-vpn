@@ -49,8 +49,8 @@ RUN unzip -q /tmp/nordvpn.zip -d /etc/openvpn/nordvpn/
 RUN rm /tmp/nordvpn.zip
 
 # Copy configuration files
-COPY scripts/ /usr/local/bin/
-COPY supervisord.conf /etc/supervisor/conf.d/
+COPY build/vpn-exit-node/scripts/ /usr/local/bin/
+COPY build/vpn-exit-node/supervisord.conf /etc/supervisor/conf.d/
 
 # Make scripts executable
 RUN chmod +x /usr/local/bin/*.sh
