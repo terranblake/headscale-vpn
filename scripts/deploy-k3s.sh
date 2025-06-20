@@ -160,23 +160,23 @@ deploy_storage() {
     log_info "Deploying storage..."
     k3s kubectl apply -f "$K8S_DIR/storage.yaml"
     
-    # Health check: Ensure all PVCs are bound
-    log_info "Waiting for PVCs to be bound..."
-    local retries=30
+    # Health check: Ensure PVCs are created (they will bind when first consumer starts)
+    log_info "Verifying PVCs are created..."
+    local retries=10
     while [[ $retries -gt 0 ]]; do
-        local pending_pvcs
-        pending_pvcs=$(k3s kubectl get pvc -n headscale-vpn --field-selector=status.phase=Pending -o name 2>/dev/null | wc -l)
-        if [[ $pending_pvcs -eq 0 ]]; then
-            log_success "All PVCs are bound"
+        local total_pvcs
+        total_pvcs=$(k3s kubectl get pvc -n headscale-vpn -o name 2>/dev/null | wc -l)
+        if [[ $total_pvcs -eq 3 ]]; then
+            log_success "All PVCs are created (will bind when pods start)"
             break
         fi
-        log_warning "Waiting for PVCs to bind... ($pending_pvcs pending, $retries attempts left)"
-        sleep 5
+        log_warning "Waiting for PVCs to be created... ($total_pvcs/3 created, $retries attempts left)"
+        sleep 2
         ((retries--))
     done
     
     if [[ $retries -eq 0 ]]; then
-        log_error "PVC binding failed"
+        log_error "PVC creation failed"
         k3s kubectl get pvc -n headscale-vpn
         exit 1
     fi
