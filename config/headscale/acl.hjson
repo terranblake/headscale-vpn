@@ -1,25 +1,14 @@
 {
-  "policy": "v2",
-  "nodeAttrs": [
-    {
-      "target": ["group:admin"],
-      "attr": ["funnel"]
-    },
-    {
-      "target": ["group:exit-nodes"],
-      "attr": ["exit-node"]
-    },
-    {
-      "target": ["group:proxy-nodes"], 
-      "attr": ["proxy"]
-    }
-  ],
+  // ACL Policy for Family Network
+  // Uses v1 format for compatibility
+  
   "groups": {
     "group:admin": ["admin@headscale.local"],
     "group:devices": ["user1@headscale.local", "user2@headscale.local"],
     "group:exit-nodes": ["vpn-exit-node@headscale.local"],
     "group:proxy-nodes": ["proxy-gateway@headscale.local"]
   },
+  
   "hosts": {
     "home-network": "192.168.1.0/24",
     "docker-network": "172.20.0.0/16",
