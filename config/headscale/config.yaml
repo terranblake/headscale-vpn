@@ -47,11 +47,9 @@ derp:
     region_code: "headscale"
     region_name: "Headscale Self-Hosted DERP"
     stun_listen_addr: "0.0.0.0:3478"
-    hostname: "headscale.terranblake.com"
+    hostname: "${DOMAIN}"
     private_key_path: /var/lib/headscale/derp_server_private.key
-    # External hostname for DERP server (accessible via HTTPS ingress)
-    hostname: "derp.${DOMAIN}"
-    # Explicitly disable TLS on the internal server (ingress handles TLS termination)
+    # TLS is handled by ingress, so disable it on the internal server
     tls_enabled: false
   
   # No external DERP servers - fully self-hosted
