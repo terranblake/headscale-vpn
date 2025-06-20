@@ -194,11 +194,11 @@ deploy_storage() {
     while [[ $retries -gt 0 ]]; do
         local total_pvcs
         total_pvcs=$(k3s kubectl get pvc -n headscale-vpn -o name 2>/dev/null | wc -l)
-        if [[ $total_pvcs -eq 3 ]]; then
+        if [[ $total_pvcs -eq 4 ]]; then
             log_success "All PVCs are created (will bind when pods start)"
             break
         fi
-        log_warning "Waiting for PVCs to be created... ($total_pvcs/3 created, $retries attempts left)"
+        log_warning "Waiting for PVCs to be created... ($total_pvcs/4 created, $retries attempts left)"
         sleep 2
         ((retries--))
     done
@@ -313,6 +313,12 @@ deploy_vpn_exit() {
 
     # Create VPN exit secrets with WireGuard config
     log_info "Creating VPN exit secrets..."
+    if [[ ! -f "$CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf" ]]; then
+        log_error "WireGuard config file not found: $CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf"
+        log_error "Please copy your WireGuard config file to this location"
+        exit 1
+    fi
+    
     k3s kubectl create secret generic vpn-exit-secrets \
         --from-file=wg0.conf="$CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf" \
         -n headscale-vpn \
