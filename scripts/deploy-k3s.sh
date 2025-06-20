@@ -292,6 +292,24 @@ deploy_headscale() {
     log_success "Headscale deployed and healthy"
 }
 
+# Build VPN exit node image
+build_vpn_exit_image() {
+    log_info "Building VPN exit node Docker image..."
+    
+    if docker image inspect headscale-vpn/vpn-exit-node:latest >/dev/null 2>&1; then
+        log_warning "VPN exit node image already exists, skipping build"
+        return 0
+    fi
+    
+    # Build the image
+    docker build -t headscale-vpn/vpn-exit-node:latest -f build/vpn-exit-node/Dockerfile .
+    
+    # Import image into k3s
+    docker save headscale-vpn/vpn-exit-node:latest | k3s ctr images import -
+    
+    log_success "VPN exit node image built and imported"
+}
+
 # Deploy VPN exit node
 deploy_vpn_exit() {
     log_info "Deploying VPN exit node..."
@@ -430,6 +448,7 @@ main() {
     deploy_storage
     deploy_database
     deploy_headscale
+    build_vpn_exit_image
     deploy_vpn_exit
     deploy_ingress
     health_check
