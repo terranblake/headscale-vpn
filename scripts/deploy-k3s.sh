@@ -101,6 +101,36 @@ setup_kubectl() {
     log_success "kubectl access configured"
 }
 
+# Clean up existing namespace for fresh deployment
+cleanup_namespace() {
+    log_info "Cleaning up existing namespace for fresh deployment..."
+    
+    # Check if namespace exists
+    if k3s kubectl get namespace headscale-vpn &>/dev/null; then
+        log_warning "Existing namespace found, cleaning up..."
+        
+        # Delete namespace (this will cascade delete all resources)
+        k3s kubectl delete namespace headscale-vpn --timeout=60s
+        
+        # Wait for namespace to be fully deleted
+        log_info "Waiting for namespace cleanup to complete..."
+        local retries=30
+        while k3s kubectl get namespace headscale-vpn &>/dev/null && [[ $retries -gt 0 ]]; do
+            sleep 2
+            ((retries--))
+        done
+        
+        if [[ $retries -eq 0 ]]; then
+            log_error "Timeout waiting for namespace cleanup"
+            exit 1
+        fi
+        
+        log_success "Namespace cleanup completed"
+    else
+        log_info "No existing namespace found"
+    fi
+}
+
 # Create namespace
 create_namespace() {
     log_info "Creating namespace..."
@@ -186,6 +216,29 @@ deploy_ingress() {
     log_success "Ingress deployed"
 }
 
+# Setup storage provisioner
+setup_storage() {
+    log_info "Setting up storage provisioner..."
+    
+    # Check if local-path provisioner is already installed
+    if k3s kubectl get storageclass local-path &>/dev/null; then
+        log_warning "Local-path storage provisioner already installed"
+    else
+        log_info "Installing local-path storage provisioner..."
+        k3s kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
+        
+        # Wait for the provisioner to be ready
+        log_info "Waiting for storage provisioner to be ready..."
+        k3s kubectl wait --for=condition=available --timeout=60s deployment/local-path-provisioner -n local-path-storage
+    fi
+    
+    # Set local-path as default storage class
+    log_info "Setting local-path as default storage class..."
+    k3s kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+    
+    log_success "Storage provisioner configured"
+}
+
 # Health check
 health_check() {
     log_info "Performing health check..."
@@ -235,6 +288,8 @@ main() {
     load_environment
     install_k3s
     setup_kubectl
+    setup_storage
+    cleanup_namespace
     create_namespace
     deploy_secrets
     deploy_configmap
