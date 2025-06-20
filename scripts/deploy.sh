@@ -153,7 +153,7 @@ EOF
     # Generate Headscale private key
     if [[ ! -f "$PROJECT_DIR/config/headscale/private.key" ]]; then
         mkdir -p "$PROJECT_DIR/config/headscale"
-        docker run --rm headscale/headscale:latest headscale generate private-key > "$PROJECT_DIR/config/headscale/private.key"
+        docker run --rm headscale/headscale:latest generate private-key > "$PROJECT_DIR/config/headscale/private.key"
         chmod 600 "$PROJECT_DIR/config/headscale/private.key"
     fi
     
