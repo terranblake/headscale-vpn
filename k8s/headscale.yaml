@@ -18,8 +18,6 @@ spec:
         image: ghcr.io/juanfont/headscale:latest
         command: ["headscale", "serve"]
         env:
-        - name: HEADSCALE_CONFIG_FILE
-          value: /etc/headscale/config.yaml
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -32,6 +30,9 @@ spec:
           name: grpc
         - containerPort: 9090
           name: metrics
+        - containerPort: 3478
+          name: derp-stun
+          protocol: UDP
         volumeMounts:
         - name: headscale-config
           mountPath: /etc/headscale
@@ -80,3 +81,7 @@ spec:
   - name: metrics
     port: 9090
     targetPort: 9090
+  - name: derp-stun
+    port: 3478
+    targetPort: 3478
+    protocol: UDP

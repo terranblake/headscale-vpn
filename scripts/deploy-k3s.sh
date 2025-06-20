@@ -296,13 +296,10 @@ deploy_headscale() {
 build_vpn_exit_image() {
     log_info "Building VPN exit node Docker image..."
     
-    if docker image inspect headscale-vpn/vpn-exit-node:latest >/dev/null 2>&1; then
-        log_warning "VPN exit node image already exists, skipping build"
-        return 0
-    fi
-    
-    # Build the image
-    docker build -t headscale-vpn/vpn-exit-node:latest -f build/vpn-exit-node/Dockerfile .
+    # Build the image (always rebuild to ensure latest config)
+    docker build -t headscale-vpn/vpn-exit-node:latest \
+        -f "$PROJECT_ROOT/build/vpn-exit-node/Dockerfile" \
+        "$PROJECT_ROOT"
     
     # Import image into k3s
     docker save headscale-vpn/vpn-exit-node:latest | k3s ctr images import -
@@ -313,29 +310,92 @@ build_vpn_exit_image() {
 # Deploy VPN exit node
 deploy_vpn_exit() {
     log_info "Deploying VPN exit node..."
+
+    # Create VPN exit secrets with WireGuard config
+    log_info "Creating VPN exit secrets..."
+    k3s kubectl create secret generic vpn-exit-secrets \
+        --from-file=wg0.conf="$CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf" \
+        -n headscale-vpn \
+        --dry-run=client -o yaml | k3s kubectl apply -f -
+    
+    # Generate Headscale auth key for the exit node
+    log_info "Generating auth key for VPN exit node..."
+    local auth_key
+    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale apikeys create --expiration 24h)
+    
+    if [[ -z "$auth_key" ]]; then
+        log_error "Failed to generate auth key for VPN exit node"
+        exit 1
+    fi
+    
+    log_info "Generated auth key for VPN exit node"
+    
+    # Update the secret with the auth key
+    k3s kubectl patch secret headscale-secrets -n headscale-vpn --type='merge' -p="{\"data\":{\"headscale-authkey\":\"$(echo -n "$auth_key" | base64 -w 0)\"}}"
+    
+    # Deploy the VPN exit node
     k3s kubectl apply -f "$K8S_DIR/vpn-exit-node.yaml"
     
-    # Wait for vpn exit node to be ready
-    log_info "Waiting for VPN exit node to be ready..."
-    k3s kubectl wait --for=condition=ready pod -l app=vpn-exit-node -n headscale-vpn --timeout=300s
-    
-    # Health check: Check Tailscale status
-    log_info "Testing VPN exit node health..."
-    local retries=10
+    # Wait for VPN exit node pod to be scheduled
+    log_info "Waiting for VPN exit node to be scheduled..."
+    local retries=30
     while [[ $retries -gt 0 ]]; do
         local pod_name
         pod_name=$(k3s kubectl get pods -l app=vpn-exit-node -n headscale-vpn -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-        if [[ -n "$pod_name" ]] && k3s kubectl exec -n headscale-vpn "$pod_name" -- tailscale status >/dev/null 2>&1; then
-            log_success "VPN exit node health check passed"
+        if [[ -n "$pod_name" ]]; then
+            log_info "VPN exit node pod scheduled: $pod_name"
             break
         fi
-        log_warning "VPN exit node health check failed, retrying... ($retries attempts left)"
-        sleep 10
+        log_warning "Waiting for VPN exit node pod to be scheduled... ($retries attempts left)"
+        sleep 5
         ((retries--))
     done
     
     if [[ $retries -eq 0 ]]; then
-        log_warning "VPN exit node health check failed (this may be expected if not fully configured)"
+        log_error "VPN exit node pod failed to schedule"
+        k3s kubectl describe daemonset vpn-exit-node -n headscale-vpn
+        exit 1
+    fi
+    
+    # Stream logs and wait for readiness
+    log_info "Waiting for VPN exit node to start (this may take a few minutes)..."
+    local pod_name
+    pod_name=$(k3s kubectl get pods -l app=vpn-exit-node -n headscale-vpn -o jsonpath='{.items[0].metadata.name}')
+    
+    # Start background log streaming
+    k3s kubectl logs -f "$pod_name" -n headscale-vpn --tail=20 2>/dev/null &
+    local log_pid=$!
+    
+    # Wait for the container to be ready (may take time for Tailscale auth)
+    retries=60  # 10 minutes timeout
+    while [[ $retries -gt 0 ]]; do
+        local pod_status
+        pod_status=$(k3s kubectl get pod "$pod_name" -n headscale-vpn -o jsonpath='{.status.phase}' 2>/dev/null)
+        
+        if [[ "$pod_status" == "Running" ]]; then
+            # Check if tailscale is authenticated
+            if k3s kubectl exec -n headscale-vpn "$pod_name" -- /usr/local/bin/tailscale status --json 2>/dev/null | grep -q '"BackendState":"Running"'; then
+                log_success "VPN exit node is running and authenticated with Headscale"
+                break
+            fi
+        fi
+        
+        if [[ "$pod_status" == "Failed" ]] || [[ "$pod_status" == "CrashLoopBackOff" ]]; then
+            log_error "VPN exit node failed to start"
+            break
+        fi
+        
+        log_warning "VPN exit node still starting... ($retries attempts left, status: $pod_status)"
+        sleep 10
+        ((retries--))
+    done
+    
+    # Stop log streaming
+    kill $log_pid 2>/dev/null || true
+    
+    if [[ $retries -eq 0 ]]; then
+        log_warning "VPN exit node may still be starting (this can take time for first run)"
+        log_info "Check status with: kubectl logs -f $pod_name -n headscale-vpn"
     fi
     
     log_success "VPN exit node deployed"

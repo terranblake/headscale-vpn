@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   name: vpn-exit-node
   namespace: headscale-vpn
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: vpn-exit-node
@@ -12,55 +13,80 @@ spec:
       labels:
         app: vpn-exit-node
     spec:
-      hostNetwork: true
       containers:
-      - name: vpn-exit-node
-        image: headscale-vpn/vpn-exit-node:latest
-        imagePullPolicy: Never
+      - name: gluetun
+        image: qmcgaw/gluetun
         securityContext:
-          privileged: true
           capabilities:
             add:
             - NET_ADMIN
-            - SYS_MODULE
         env:
-        - name: HEADSCALE_URL
-          value: "http://headscale.headscale-vpn.svc.cluster.local:8080"
-        - name: HEADSCALE_PREAUTH_KEY
-          value: "${HEADSCALE_PREAUTH_KEY}"
-        - name: NORDVPN_USER
+        - name: VPN_SERVICE_PROVIDER
+          value: "custom"
+        - name: VPN_TYPE
+          value: "wireguard"
+        volumeMounts:
+        - name: tun-device
+          mountPath: /dev/net/tun
+        - name: gluetun-data
+          mountPath: /gluetun
+        - name: vpn-config
+          mountPath: /gluetun/wireguard
+          readOnly: true
+        ports:
+        - containerPort: 8000
+          name: control
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"  
+            cpu: "100m"
+      - name: tailscale
+        image: tailscale/tailscale
+        env:
+        - name: TS_AUTHKEY
           valueFrom:
             secretKeyRef:
               name: headscale-secrets
-              key: nordvpn-user
-        - name: NORDVPN_PASS
-          valueFrom:
-            secretKeyRef:
-              name: headscale-secrets
-              key: nordvpn-pass
-        - name: NORDVPN_SERVER
-          value: "${NORDVPN_SERVER:-us}"
-        - name: BYPASS_DOMAINS
-          value: "${BYPASS_DOMAINS:-}"
-        - name: BYPASS_IPS
-          value: "${BYPASS_IPS:-}"
+              key: headscale-authkey
+        - name: TS_STATE_DIR
+          value: "/var/lib/tailscale"
+        - name: TS_HOSTNAME
+          value: "vpn-exit-node"
+        - name: TS_EXTRA_ARGS
+          value: "--login-server=http://headscale.headscale-vpn.svc.cluster.local:8080 --advertise-exit-node --accept-routes=false --accept-dns=false"
+        - name: TS_USERSPACE
+          value: "false"
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
         volumeMounts:
         - name: vpn-exit-data
           mountPath: /var/lib/tailscale
         - name: tun-device
           mountPath: /dev/net/tun
-        - name: vpn-config
-          mountPath: /etc/vpn-config
-          readOnly: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
       volumes:
       - name: vpn-exit-data
         persistentVolumeClaim:
           claimName: vpn-exit-data-pvc
+      - name: gluetun-data
+        persistentVolumeClaim:
+          claimName: gluetun-data-pvc
       - name: tun-device
         hostPath:
           path: /dev/net/tun
       - name: vpn-config
-        configMap:
-          name: vpn-exit-config
+        secret:
+          secretName: vpn-exit-secrets
       nodeSelector:
         kubernetes.io/os: linux

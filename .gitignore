@@ -30,3 +30,6 @@ Thumbs.db
 
 # Tailscale state files
 tailscaled.state*
+
+
+**/*.private

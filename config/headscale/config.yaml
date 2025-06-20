@@ -39,24 +39,24 @@ database:
     max_idle_conns: 10
     conn_max_idle_time: 3600s
 
-# DERP configuration - use built-in DERP servers or specify custom
+# DERP configuration - self-hosted DERP server (no external Tailscale dependencies)
 derp:
   server:
-    enabled: false
+    enabled: true
     region_id: 999
     region_code: "headscale"
-    region_name: "Headscale Embedded DERP"
+    region_name: "Headscale Self-Hosted DERP"
     stun_listen_addr: "0.0.0.0:3478"
+    private_key_path: /var/lib/headscale/derp_server_private.key
   
-  # Use Tailscale's DERP servers (can be disabled for full self-hosting)
-  urls:
-    - https://controlplane.tailscale.com/derpmap/default
+  # No external DERP servers - fully self-hosted
+  urls: []
   
   # Paths to custom DERP map files
   paths: []
   
-  # Auto update frequency
-  auto_update_enabled: true
+  # Disable auto update from external sources
+  auto_update_enabled: false
   update_frequency: 24h
 
 # Disable Tailscale's coordination servers completely
@@ -86,7 +86,7 @@ dns:
   
   # Magic DNS settings
   magic_dns: true
-  base_domain: headscale.local
+  base_domain: family.local
 
 # Logging configuration
 log:

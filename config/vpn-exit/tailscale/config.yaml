@@ -1,0 +1,34 @@
+# VPN Exit Node Configuration
+# This file defines the configuration for the VPN exit node container
+
+# Tailscale Configuration
+tailscale:
+  auth_key_env: "HEADSCALE_PREAUTH_KEY"
+  headscale_url_env: "HEADSCALE_URL"
+  state_file: "/var/lib/tailscale/tailscaled.state"
+  socket_file: "/var/run/tailscale/tailscaled.sock"
+  advertise_exit_node: true
+  accept_routes: false
+  accept_dns: false
+  netfilter_mode: "on"
+  
+# Routing Configuration
+routing:
+  # Route all mesh traffic through VPN
+  route_mesh_through_vpn: true
+  
+  # Firewall rules (iptables)
+  enable_nat: true
+  enable_forwarding: true
+  
+# Health Check Configuration
+health:
+  check_interval: 30
+  vpn_check_command: "ping -c 1 -W 5 8.8.8.8"
+  tailscale_check_command: "/usr/local/bin/tailscale status --json"
+  
+# Logging Configuration
+logging:
+  level: "info"
+  format: "text"
+  log_to_stdout: true
