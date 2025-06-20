@@ -150,9 +150,15 @@ deploy_secrets() {
 
 # Deploy configmap
 deploy_configmap() {
-    log_info "Deploying configmap..."
-    k3s kubectl apply -f "$K8S_DIR/configmap.yaml"
-    log_success "Configmap deployed"
+    log_info "Deploying configmap from actual config files..."
+    
+    # Create configmap from the actual headscale config file
+    k3s kubectl create configmap headscale-config \
+        --from-file="$CONFIG_DIR/headscale/" \
+        -n headscale-vpn \
+        --dry-run=client -o yaml | k3s kubectl apply -f -
+    
+    log_success "Configmap deployed from actual config files"
 }
 
 # Deploy storage
@@ -191,7 +197,16 @@ deploy_database() {
     
     # Wait for database to be ready
     log_info "Waiting for database to be ready..."
+    
+    # Start background log streaming
+    k3s kubectl logs -f -l app=headscale-db -n headscale-vpn --tail=10 2>/dev/null &
+    local log_pid=$!
+    
+    # Wait for pod to be ready
     k3s kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=300s
+    
+    # Stop log streaming
+    kill $log_pid 2>/dev/null || true
     
     # Health check: Test database connection
     log_info "Testing database connection..."
@@ -218,18 +233,21 @@ deploy_database() {
 deploy_headscale() {
     log_info "Deploying Headscale..."
     
-    # Create config volume from host files
-    k3s kubectl create configmap headscale-files \
-        --from-file="$CONFIG_DIR/headscale/" \
-        -n headscale-vpn \
-        --dry-run=client -o yaml | k3s kubectl apply -f -
-    
-    # Deploy headscale
+    # Deploy headscale (configmap already created in deploy_configmap)
     k3s kubectl apply -f "$K8S_DIR/headscale.yaml"
     
     # Wait for headscale to be ready
     log_info "Waiting for Headscale to be ready..."
+    
+    # Start background log streaming
+    k3s kubectl logs -f -l app=headscale -n headscale-vpn --tail=10 2>/dev/null &
+    local log_pid=$!
+    
+    # Wait for pod to be ready
     k3s kubectl wait --for=condition=ready pod -l app=headscale -n headscale-vpn --timeout=300s
+    
+    # Stop log streaming
+    kill $log_pid 2>/dev/null || true
     
     # Health check: Test Headscale API
     log_info "Testing Headscale API health..."
