@@ -749,7 +749,7 @@ check_traefik_dashboard() {
     
     # Try to access dashboard API
     log_info "Testing Traefik API access..."
-    if k3s kubectl port-forward -n traefik "$TRAEFIK_POD" 8080:8080 &>/dev/null &
+    if k3s kubectl port-forward -n traefik "$TRAEFIK_POD" 8080:8080 &>/dev/null & then
         local port_forward_pid=$!
         sleep 2
         
