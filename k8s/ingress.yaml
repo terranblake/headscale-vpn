@@ -12,10 +12,10 @@ spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - headscale.${DOMAIN}
+    - headscale.terranblake.com
     secretName: headscale-tls
   rules:
-  - host: headscale.${DOMAIN}
+  - host: headscale.terranblake.com
     http:
       paths:
       - path: /
