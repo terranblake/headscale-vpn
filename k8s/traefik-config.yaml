@@ -1,59 +1,9 @@
-apiVersion: helm.cattle.io/v1
-kind: HelmChartConfig
-metadata:
-  name: traefik
-  namespace: kube-system
-spec:
-  valuesContent: |-
-    hostNetwork: true
-    service:
-      enabled: false
-    securityContext:
-      capabilities:
-        add:
-          - NET_BIND_SERVICE
-        drop:
-          - ALL
-      readOnlyRootFilesystem: true
-      runAsNonRoot: false
-      runAsUser: 0
-    ports:
-      web:
-        port: 80
-        expose: true
-        protocol: TCP
-      websecure:
-        port: 443
-        expose: true
-        protocol: TCP
-        tls:
-          enabled: true
-    providers:
-      kubernetesIngress:
-        publishedService:
-          enabled: true
-    certificatesResolvers:
-      letsencrypt:
-        acme:
-          email: admin@terranblake.com
-          storage: /data/acme.json
-          httpChallenge:
-            entryPoint: web
-    deployment:
-      replicas: 1
-      strategy:
-        type: Recreate
-    persistence:
-      enabled: true
-      name: acme-storage
-      size: 1Gi
-      path: /data
----
+# PersistentVolumeClaim for Traefik ACME storage
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: acme-storage
-  namespace: kube-system
+  name: traefik-acme-storage
+  namespace: traefik
 spec:
   accessModes:
     - ReadWriteOnce

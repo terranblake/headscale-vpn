@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # K3s Deployment Script for Headscale VPN
-# This script sets up a K3s cluster with Traefik and deploys the VPN services
+# This script sets up a K3s cluster with custom Traefik and deploys the VPN services
 
 set -euo pipefail
 
@@ -58,17 +58,17 @@ load_environment() {
     log_success "Environment variables loaded"
 }
 
-# Install K3s with Traefik
+# Install K3s without default Traefik (we'll install our own)
 install_k3s() {
-    log_info "Installing K3s with Traefik..."
+    log_info "Installing K3s without default Traefik..."
     
     if command -v k3s &> /dev/null; then
         log_warning "K3s is already installed"
         return 0
     fi
     
-    # Install K3s with Traefik enabled
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=servicelb --disable=local-storage" sh -
+    # Install K3s with default Traefik disabled
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=servicelb --disable=local-storage --disable=traefik" sh -
     
     # Wait for K3s to be ready
     log_info "Waiting for K3s to be ready..."
@@ -469,19 +469,38 @@ setup_storage() {
     log_success "Storage provisioner configured"
 }
 
-# Configure Traefik with Let's Encrypt and host networking
+# Install and configure custom Traefik with Let's Encrypt
 configure_traefik() {
-    log_info "Configuring Traefik with Let's Encrypt and host networking..."
+    log_info "Installing custom Traefik with Let's Encrypt and host networking..."
     
+    # Check if Helm is available
+    if ! command -v helm &> /dev/null; then
+        log_info "Installing Helm..."
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    fi
+    
+    # Add Traefik Helm repository
+    log_info "Adding Traefik Helm repository..."
+    helm repo add traefik https://traefik.github.io/charts
+    helm repo update
+    
+    # Create traefik namespace
+    k3s kubectl create namespace traefik --dry-run=client -o yaml | k3s kubectl apply -f -
+    
+    # Apply persistent volume for ACME storage first
     k3s kubectl apply -f k8s/traefik-config.yaml
     
-    log_info "Waiting for Traefik to reconfigure..."
-    sleep 10
+    # Install Traefik with our custom values
+    log_info "Installing Traefik with custom configuration..."
+    helm upgrade --install traefik traefik/traefik \
+        --namespace traefik \
+        --values k8s/traefik-values.yaml \
+        --wait --timeout=5m
     
-    # Wait for Traefik to restart with new configuration
-    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=30s
+    log_info "Waiting for Traefik to be ready..."
+    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n traefik --timeout=60s
     
-    log_info "Traefik configured successfully"
+    log_success "Custom Traefik installed and configured successfully"
 }
 
 # Health check

@@ -1,41 +1,44 @@
-deployment:
-  replicas: 1
-  strategy:
-    type: Recreate
+# Traefik Helm Values
+# Custom configuration for Traefik with Let's Encrypt ACME
 
-# Security context for binding to privileged ports with hostNetwork
-podSecurityContext:
-  runAsNonRoot: false
-  runAsUser: 0
-  runAsGroup: 0
+# Use host networking for direct port access
+hostNetwork: true
 
+# Disable default service since we use hostNetwork
+service:
+  enabled: false
+
+# Security context for running as root with NET_BIND_SERVICE
 securityContext:
-  allowPrivilegeEscalation: true
   capabilities:
     add:
       - NET_BIND_SERVICE
-    drop: []
-  
-service:
-  type: ClusterIP
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: false
+  runAsUser: 0
 
-hostNetwork: true
-
+# Port configuration
 ports:
   web:
     port: 80
-    hostPort: 80
+    expose: true
     protocol: TCP
   websecure:
     port: 443
-    hostPort: 443
+    expose: true
     protocol: TCP
+    tls:
+      enabled: true
 
+# Provider configuration
 providers:
   kubernetesIngress:
     publishedService:
-      enabled: false
+      enabled: true
 
+# Let's Encrypt ACME configuration
 certificatesResolvers:
   letsencrypt:
     acme:
@@ -43,3 +46,37 @@ certificatesResolvers:
       storage: /data/acme.json
       httpChallenge:
         entryPoint: web
+
+# Deployment configuration
+deployment:
+  replicas: 1
+  strategy:
+    type: Recreate
+
+# Persistent storage for ACME certificates
+persistence:
+  enabled: true
+  name: acme-storage
+  size: 1Gi
+  path: /data
+
+# Additional volumes for ACME storage
+volumes:
+  - name: acme-storage
+    persistentVolumeClaim:
+      claimName: traefik-acme-storage
+
+# Mount ACME storage volume
+additionalVolumeMounts:
+  - name: acme-storage
+    mountPath: /data
+
+# Enable dashboard
+api:
+  dashboard: true
+  insecure: false
+
+# Ingress class configuration
+ingressClass:
+  enabled: true
+  isDefaultClass: true
