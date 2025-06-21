@@ -10,10 +10,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: headscale-vpn-auth@kubernetescrd
 spec:
   ingressClassName: traefik
-  tls:
-  - hosts:
-    - headscale.terranblake.com
-    secretName: headscale-tls
   rules:
   - host: headscale.terranblake.com
     http:
