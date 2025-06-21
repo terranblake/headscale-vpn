@@ -29,7 +29,7 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: auth
+  name: headscale-vpn-auth
   namespace: headscale-vpn
 spec:
   basicAuth:
