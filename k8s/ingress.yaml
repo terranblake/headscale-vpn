@@ -12,7 +12,6 @@ spec:
   tls:
   - hosts:
     - headscale.terranblake.com
-    secretName: headscale-tls
   rules:
   - host: headscale.terranblake.com
     http:
