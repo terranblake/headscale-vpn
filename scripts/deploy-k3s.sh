@@ -488,13 +488,13 @@ configure_traefik() {
     k3s kubectl create namespace traefik --dry-run=client -o yaml | k3s kubectl apply -f -
     
     # Apply persistent volume for ACME storage first
-    k3s kubectl apply -f k8s/traefik-config.yaml
+    k3s kubectl apply -f "$K8S_DIR/traefik-config.yaml"
     
     # Install Traefik with our custom values
     log_info "Installing Traefik with custom configuration..."
     helm upgrade --install traefik traefik/traefik \
         --namespace traefik \
-        --values k8s/traefik-values.yaml \
+        --values "$K8S_DIR/traefik-values.yaml" \
         --wait --timeout=5m
     
     log_info "Waiting for Traefik to be ready..."
@@ -553,6 +553,7 @@ main() {
     install_k3s
     setup_kubectl
     setup_storage
+    configure_traefik  # Install Traefik FIRST to provide CRDs
     cleanup_namespace
     create_namespace
     deploy_secrets
@@ -561,8 +562,7 @@ main() {
     deploy_database
     deploy_headscale
     deploy_vpn_exit
-    deploy_ingress
-    configure_traefik
+    deploy_ingress  # Deploy ingress AFTER Traefik is installed
     health_check
     display_access_info
     
