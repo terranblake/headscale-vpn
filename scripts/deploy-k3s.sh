@@ -476,10 +476,10 @@ configure_traefik() {
     k3s kubectl apply -f k8s/traefik-config.yaml
     
     log_info "Waiting for Traefik to reconfigure..."
-    sleep 30
+    sleep 10
     
     # Wait for Traefik to restart with new configuration
-    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=120s
+    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=30s
     
     log_info "Traefik configured successfully"
 }
