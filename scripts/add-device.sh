@@ -1,7 +1,7 @@
 #!/bin/bash
 # Add a new device to the Headscale network
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -19,9 +19,9 @@ echo "================================"
 # Function to check if headscale is running
 check_headscale() {
     echo -e "${YELLOW}Checking Headscale connectivity...${NC}"
-    if ! ssh mgmt-host "kubectl get pods -n headscale-vpn -l app=headscale --no-headers | grep Running" >/dev/null 2>&1; then
+    if ! ssh mgmt-host "kubectl get pods -n headscale-vpn -l app=headscale --no-headers 2>/dev/null | grep -q Running"; then
         echo -e "${RED}ERROR: Headscale pod is not running in Kubernetes${NC}"
-        echo "Please check the deployment: kubectl get pods -n headscale-vpn"
+        echo "Please check the deployment: ssh mgmt-host kubectl get pods -n headscale-vpn"
         exit 1
     fi
     echo -e "${GREEN}Headscale is running${NC}"
@@ -33,10 +33,10 @@ create_user() {
     echo -e "${YELLOW}Creating user: $username${NC}"
     
     # Check if user already exists
-    if ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users list" | grep -q "$username"; then
+    if ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users list 2>/dev/null" | grep -q "$username"; then
         echo -e "${GREEN}User $username already exists${NC}"
     else
-        ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users create $username"
+        ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users create $username" 2>/dev/null
         echo -e "${GREEN}User $username created${NC}"
     fi
 }
@@ -48,15 +48,20 @@ generate_preauthkey() {
     
     echo -e "${YELLOW}Generating pre-auth key for user: $username${NC}"
     
+    # Validate expiry format
+    if [[ "$expiry" == "never" ]]; then
+        expiry="87600h"  # 10 years
+    fi
+    
     # Get user ID first
-    local user_id=$(ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users list" | grep "$username" | awk '{print $1}')
+    local user_id=$(ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users list 2>/dev/null" | grep "$username" | awk '{print $1}')
     
     if [[ -z "$user_id" ]]; then
         echo -e "${RED}ERROR: Could not find user ID for $username${NC}"
         exit 1
     fi
     
-    local key=$(ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user $user_id --expiration $expiry --reusable" | grep -o '[a-f0-9]\{48\}')
+    local key=$(ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user $user_id --expiration $expiry --reusable 2>/dev/null" | grep -o '[a-f0-9]\{48\}')
     
     if [[ -n "$key" ]]; then
         echo "$key"
