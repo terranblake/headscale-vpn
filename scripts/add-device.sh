@@ -4,7 +4,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HEADSCALE_URL=${HEADSCALE_URL:-http://localhost:8080}
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+HEADSCALE_URL=${HEADSCALE_URL:-https://headscale.terranblake.com}
 
 # Colors for output
 RED='\033[0;31m'
@@ -17,11 +18,13 @@ echo "================================"
 
 # Function to check if headscale is running
 check_headscale() {
-    if ! curl -s "$HEADSCALE_URL/health" >/dev/null 2>&1; then
-        echo -e "${RED}ERROR: Headscale server is not running or not accessible at $HEADSCALE_URL${NC}"
-        echo "Please start the infrastructure first: docker-compose up -d"
+    echo -e "${YELLOW}Checking Headscale connectivity...${NC}"
+    if ! ssh mgmt-host "kubectl get pods -n headscale-vpn -l app=headscale --no-headers | grep Running" >/dev/null 2>&1; then
+        echo -e "${RED}ERROR: Headscale pod is not running in Kubernetes${NC}"
+        echo "Please check the deployment: kubectl get pods -n headscale-vpn"
         exit 1
     fi
+    echo -e "${GREEN}Headscale is running${NC}"
 }
 
 # Function to create a user if it doesn't exist
@@ -29,13 +32,12 @@ create_user() {
     local username="$1"
     echo -e "${YELLOW}Creating user: $username${NC}"
     
-    # Check if running in Docker
-    if command -v docker >/dev/null 2>&1 && docker ps | grep -q headscale; then
-        docker exec headscale headscale users create "$username" 2>/dev/null || true
+    # Check if user already exists
+    if ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users list" | grep -q "$username"; then
+        echo -e "${GREEN}User $username already exists${NC}"
     else
-        echo -e "${RED}ERROR: Could not find running headscale container${NC}"
-        echo "Please ensure the infrastructure is running: docker-compose up -d"
-        exit 1
+        ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users create $username"
+        echo -e "${GREEN}User $username created${NC}"
     fi
 }
 
@@ -46,16 +48,20 @@ generate_preauthkey() {
     
     echo -e "${YELLOW}Generating pre-auth key for user: $username${NC}"
     
-    if command -v docker >/dev/null 2>&1 && docker ps | grep -q headscale; then
-        local key=$(docker exec headscale headscale preauthkeys create --user "$username" --expiration "$expiry" --output json | jq -r '.key')
-        if [[ "$key" != "null" && -n "$key" ]]; then
-            echo "$key"
-        else
-            echo -e "${RED}ERROR: Failed to generate pre-auth key${NC}"
-            exit 1
-        fi
+    # Get user ID first
+    local user_id=$(ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale users list" | grep "$username" | awk '{print $1}')
+    
+    if [[ -z "$user_id" ]]; then
+        echo -e "${RED}ERROR: Could not find user ID for $username${NC}"
+        exit 1
+    fi
+    
+    local key=$(ssh mgmt-host "kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user $user_id --expiration $expiry --reusable" | grep -o '[a-f0-9]\{48\}')
+    
+    if [[ -n "$key" ]]; then
+        echo "$key"
     else
-        echo -e "${RED}ERROR: Could not find running headscale container${NC}"
+        echo -e "${RED}ERROR: Failed to generate pre-auth key${NC}"
         exit 1
     fi
 }
@@ -100,8 +106,9 @@ show_instructions() {
     echo -e "${YELLOW}3. (Optional) Set exit node:${NC}"
     echo "   sudo tailscale up --exit-node=vpn-exit-node"
     echo
-    echo -e "${YELLOW}4. (Optional) Set proxy:${NC}"
-    echo "   Configure your device to use proxy-gateway IP on port 8080"
+    echo -e "${YELLOW}4. Verify connection:${NC}"
+    echo "   tailscale status"
+    echo "   tailscale ip"
     echo
     echo -e "${GREEN}Your device should now be connected to the mesh VPN!${NC}"
 }
