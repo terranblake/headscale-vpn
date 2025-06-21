@@ -9,9 +9,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
 spec:
   ingressClassName: traefik
-  tls:
-  - hosts:
-    - headscale.terranblake.com
   rules:
   - host: headscale.terranblake.com
     http:
