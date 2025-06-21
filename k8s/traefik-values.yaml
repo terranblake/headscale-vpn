@@ -42,7 +42,7 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: admin@terranblake.com
+      email: ${ACME_EMAIL}
       storage: /data/acme.json
       httpChallenge:
         entryPoint: web

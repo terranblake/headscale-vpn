@@ -423,6 +423,10 @@ deploy_vpn_exit() {
 deploy_ingress() {
     log_info "Deploying ingress..."
     
+    # Clean up any existing TLS secrets that might conflict with ACME
+    log_info "Cleaning up any existing TLS secrets..."
+    k3s kubectl delete secret headscale-tls -n headscale-vpn 2>/dev/null || true
+    
     # Substitute environment variables in ingress.yaml
     envsubst < "$K8S_DIR/ingress.yaml" | k3s kubectl apply -f -
     
@@ -490,12 +494,18 @@ configure_traefik() {
     # Apply persistent volume for ACME storage first
     k3s kubectl apply -f "$K8S_DIR/traefik-config.yaml"
     
-    # Install Traefik with our custom values
+    # Install Traefik with our custom values (substitute environment variables)
     log_info "Installing Traefik with custom configuration..."
+    local temp_values="/tmp/traefik-values-processed.yaml"
+    envsubst < "$K8S_DIR/traefik-values.yaml" > "$temp_values"
+    
     helm upgrade --install traefik traefik/traefik \
         --namespace traefik \
-        --values "$K8S_DIR/traefik-values.yaml" \
+        --values "$temp_values" \
         --wait --timeout=5m
+    
+    # Cleanup temporary file
+    rm -f "$temp_values"
     
     log_info "Waiting for Traefik to be ready..."
     k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n traefik --timeout=60s
