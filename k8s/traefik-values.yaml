@@ -23,12 +23,12 @@ securityContext:
 ports:
   web:
     port: 80
-    expose: true
     protocol: TCP
+    hostPort: 80
   websecure:
     port: 443
-    expose: true
     protocol: TCP
+    hostPort: 443
     tls:
       enabled: true
 
@@ -56,20 +56,8 @@ deployment:
 # Persistent storage for ACME certificates
 persistence:
   enabled: true
-  name: acme-storage
   size: 1Gi
   path: /data
-
-# Additional volumes for ACME storage
-volumes:
-  - name: acme-storage
-    persistentVolumeClaim:
-      claimName: traefik-acme-storage
-
-# Mount ACME storage volume
-additionalVolumeMounts:
-  - name: acme-storage
-    mountPath: /data
 
 # Enable dashboard
 api:
