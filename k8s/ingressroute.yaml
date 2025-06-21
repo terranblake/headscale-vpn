@@ -1,0 +1,26 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: headscale-ingressroute
+  namespace: headscale-vpn
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`headscale.terranblake.com`)
+      kind: Rule
+      services:
+        - name: headscale
+          port: 8080
+  tls:
+    certResolver: letsencrypt
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: headscale-vpn-auth
+  namespace: headscale-vpn
+spec:
+  basicAuth:
+    secret: headscale-auth
