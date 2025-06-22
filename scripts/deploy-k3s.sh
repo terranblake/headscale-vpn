@@ -488,6 +488,19 @@ configure_traefik() {
     helm repo add traefik https://traefik.github.io/charts
     helm repo update
     
+    # Clean up any existing Traefik deployment to avoid port conflicts
+    log_info "Cleaning up any existing Traefik deployment..."
+    helm uninstall traefik -n traefik 2>/dev/null || true
+    k3s kubectl delete pods -n traefik --all --timeout=30s 2>/dev/null || true
+    
+    # Wait for old pods to be fully removed
+    log_info "Waiting for old Traefik pods to be removed..."
+    local retries=10
+    while k3s kubectl get pods -n traefik --no-headers 2>/dev/null | grep -q . && [[ $retries -gt 0 ]]; do
+        sleep 2
+        ((retries--))
+    done
+    
     # Create Cloudflare credentials secret for DNS-01 challenge
     log_info "Creating Cloudflare credentials secret for DNS-01 challenge..."
     k3s kubectl create secret generic cloudflare-credentials \
@@ -510,17 +523,10 @@ configure_traefik() {
     helm upgrade --install traefik traefik/traefik \
         --namespace traefik \
         --values "$temp_values" \
-        --wait --timeout=1m
+        --wait --timeout=2m
     
     # Cleanup temporary file
     rm -f "$temp_values"
-    
-    log_info "Waiting for Traefik to be ready..."
-    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n traefik --timeout=60s || {
-        log_warning "Traefik pod readiness check timed out, checking status..."
-        k3s kubectl get pods -n traefik
-        k3s kubectl describe pods -l app.kubernetes.io/name=traefik -n traefik
-    }
     
     log_success "Custom Traefik installed and configured successfully"
 }
