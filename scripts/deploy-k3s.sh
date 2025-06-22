@@ -510,7 +510,7 @@ configure_traefik() {
     helm upgrade --install traefik traefik/traefik \
         --namespace traefik \
         --values "$temp_values" \
-        --wait --timeout=5m
+        --wait --timeout=1m
     
     # Cleanup temporary file
     rm -f "$temp_values"
