@@ -47,7 +47,7 @@ load_environment() {
     set +a
     
     # Validate required variables
-    required_vars=("DOMAIN" "POSTGRES_PASSWORD" "ACME_EMAIL")
+    required_vars=("DOMAIN" "POSTGRES_PASSWORD" "ACME_EMAIL" "CLOUDFLARE_EMAIL" "CLOUDFLARE_API_KEY")
     for var in "${required_vars[@]}"; do
         if [[ -z "${!var:-}" ]]; then
             log_error "Required environment variable $var is not set"
@@ -488,19 +488,27 @@ configure_traefik() {
     helm repo add traefik https://traefik.github.io/charts
     helm repo update
     
+    # Create Cloudflare credentials secret for DNS-01 challenge
+    log_info "Creating Cloudflare credentials secret for DNS-01 challenge..."
+    k3s kubectl create secret generic cloudflare-credentials \
+        --from-literal=email="$CLOUDFLARE_EMAIL" \
+        --from-literal=api-key="$CLOUDFLARE_API_KEY" \
+        -n kube-system \
+        --dry-run=client -o yaml | k3s kubectl apply -f -
+    
     # Create traefik namespace
-    k3s kubectl create namespace traefik --dry-run=client -o yaml | k3s kubectl apply -f -
+    k3s kubectl create namespace kube-system --dry-run=client -o yaml | k3s kubectl apply -f -
     
     # Apply persistent volume for ACME storage first
     k3s kubectl apply -f "$K8S_DIR/traefik-config.yaml"
     
     # Install Traefik with our custom values (substitute environment variables)
-    log_info "Installing Traefik with custom configuration..."
+    log_info "Installing Traefik with DNS-01 challenge configuration..."
     local temp_values="/tmp/traefik-values-processed.yaml"
-    envsubst < "$K8S_DIR/traefik-values.yaml" > "$temp_values"
+    envsubst < "$K8S_DIR/traefik-values-dns.yaml" > "$temp_values"
     
     helm upgrade --install traefik traefik/traefik \
-        --namespace traefik \
+        --namespace kube-system \
         --values "$temp_values" \
         --wait --timeout=5m
     
@@ -508,7 +516,7 @@ configure_traefik() {
     rm -f "$temp_values"
     
     log_info "Waiting for Traefik to be ready..."
-    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n traefik --timeout=60s
+    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=60s
     
     log_success "Custom Traefik installed and configured successfully"
 }
