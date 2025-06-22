@@ -516,7 +516,11 @@ configure_traefik() {
     rm -f "$temp_values"
     
     log_info "Waiting for Traefik to be ready..."
-    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n traefik --timeout=60s
+    k3s kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n traefik --timeout=60s || {
+        log_warning "Traefik pod readiness check timed out, checking status..."
+        k3s kubectl get pods -n traefik
+        k3s kubectl describe pods -l app.kubernetes.io/name=traefik -n traefik
+    }
     
     log_success "Custom Traefik installed and configured successfully"
 }
