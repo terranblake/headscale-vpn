@@ -1,10 +1,10 @@
 {
   // Groups define collections of users
   "groups": {
-    "group:admin":       ["terran"],
-    "group:devices":     ["terran", "testuser"],
-    "group:exit-nodes":  ["vpn-admin"],
-    "group:proxy-nodes": ["vpn-admin"]
+    "group:admin":       ["terran@"],
+    "group:devices":     ["terran@", "testuser@"],
+    "group:exit-nodes":  ["vpn-admin@"],
+    "group:proxy-nodes": ["vpn-admin@"]
   },
 
   // Tags and their owners - this is where we define who can assign tags
