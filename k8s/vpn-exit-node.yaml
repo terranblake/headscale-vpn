@@ -28,7 +28,7 @@ spec:
         - name: FIREWALL_OUTBOUND_SUBNETS
           value: "10.42.0.0/16,10.43.0.0/16,100.64.0.0/10,10.43.0.10/32"
         - name: WIREGUARD_MTU
-          value: "1200"
+          value: "1280"
         - name: DNS_KEEP_NAMESERVER
           value: "on"
         - name: DNS_ADDRESS
