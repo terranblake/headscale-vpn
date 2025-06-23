@@ -90,7 +90,7 @@ dns:
   
   # Magic DNS settings
   magic_dns: true
-  base_domain: terranblake.com
+  base_domain: vpn.internal
 
 # Logging configuration
 log:
