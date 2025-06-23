@@ -9,14 +9,11 @@ tailscale:
   socket_file: "/var/run/tailscale/tailscaled.sock"
   advertise_exit_node: true
   accept_routes: false
-  accept_dns: false
+  accept_dns: true
   netfilter_mode: "on"
   
 # Routing Configuration
 routing:
-  # Route all mesh traffic through VPN
-  route_mesh_through_vpn: true
-  
   # Firewall rules (iptables)
   enable_nat: true
   enable_forwarding: true

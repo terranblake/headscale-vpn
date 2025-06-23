@@ -26,7 +26,7 @@ spec:
         - name: VPN_TYPE
           value: "wireguard"
         - name: FIREWALL_OUTBOUND_SUBNETS
-          value: "10.42.0.0/16,10.43.0.0/16,100.64.0.0/10,10.43.0.10/32"
+          value: "10.42.0.0/16,10.43.0.0/16,10.43.0.10/32"
         - name: WIREGUARD_MTU
           value: "1280"
         - name: DNS_KEEP_NAMESERVER
@@ -64,9 +64,14 @@ spec:
         - name: TS_HOSTNAME
           value: "vpn-exit-node"
         - name: TS_EXTRA_ARGS
-          value: "--reset --login-server=http://headscale.headscale-vpn:8080 --advertise-exit-node --accept-routes=false"
+          value: " \
+            --reset \
+            --login-server=http://headscale.headscale-vpn:8080 \
+            --advertise-tags=tag:exit-node \
+            --advertise-exit-node \
+            --accept-routes"
         - name: TS_USERSPACE
-          value: "false"
+          value: "true"
         - name: TS_ACCEPT_DNS
           value: "false"
         - name: TS_KUBE_SECRET
