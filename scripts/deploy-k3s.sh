@@ -517,26 +517,24 @@ configure_traefik() {
 # Health check
 health_check() {
     log_info "Performing health check..."
-    
-    # Check all pods are running
     local failed_pods
     failed_pods=$(kubectl get pods -n headscale-vpn --no-headers | grep -v Running | wc -l)
     
     if [[ $failed_pods -gt 0 ]]; then
         log_error "Some pods are not running:"
         kubectl get pods -n headscale-vpn
-        return 1
+        return
+    else
+        # Check services
+        log_info "Services status:"
+        kubectl get services -n headscale-vpn
+        
+        # Check ingress
+        log_info "Ingress status:"
+        kubectl get ingress -n headscale-vpn
+        
+        log_success "All services are healthy"
     fi
-    
-    # Check services
-    log_info "Services status:"
-    kubectl get services -n headscale-vpn
-    
-    # Check ingress
-    log_info "Ingress status:"
-    kubectl get ingress -n headscale-vpn
-    
-    log_success "All services are healthy"
 }
 
 # Display access information
@@ -544,8 +542,13 @@ display_access_info() {
     log_success "Deployment completed successfully!"
     echo
     echo "=== Access Information ==="
-    echo "Headscale Web UI: https://headscale.$DOMAIN"
+    echo "Headscale Web UI: https://headscale.vpn.$DOMAIN"
+    echo "TODO: Headplane Web UI: https://headplane.vpn.$DOMAIN"
     echo "Traefik Dashboard: https://traefik.$DOMAIN"
+    echo
+    echo "=== Setup (on fresh install) ==="
+    echo "TODO: Output the api key for headplane (probs better to just supply to headplane config)"
+    echo "TODO: Output user info and preauth key for 'phone' node"
     echo
     echo "=== Useful Commands ==="
     echo "View pods: kubectl get pods -n headscale-vpn"
