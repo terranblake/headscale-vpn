@@ -32,7 +32,7 @@ spec:
         - name: OUTBOUND_SUBNETS
           value: "0.0.0.0/0"
         - name: OUTBOUND_SUBNETS_EXCLUDE
-          value: "100.64.0.0/10,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+          value: "100.64.0.0/10,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.42.0.0/16"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
