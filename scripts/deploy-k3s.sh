@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# K3s Deployment Script for Headscale VPN
-# This script sets up a K3s cluster with custom Traefik and deploys the VPN services
+# Deployment Script for Headscale VPN
+# This script sets up a cluster with custom Traefik and deploys the VPN services
 
 set -euo pipefail
 
@@ -24,10 +24,10 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Check if running as root (required for K3s installation)
+# Check if running as root (required for installation)
 check_root() {
     if [[ $EUID -ne 0 ]]; then
-        log_error "This script must be run as root for K3s installation"
+        log_error "This script must be run as root for installation"
         exit 1
     fi
 }
@@ -58,45 +58,45 @@ load_environment() {
     log_success "Environment variables loaded"
 }
 
-# Install K3s without default Traefik (we'll install our own)
+# Install without default Traefik (we'll install our own)
 install_k3s() {
-    log_info "Installing K3s without default Traefik..."
+    log_info "Installing without default Traefik..."
     
-    if command -v k3s &> /dev/null; then
-        log_warning "K3s is already installed"
+    if command -v &> /dev/null; then
+        log_warning "is already installed"
         return 0
     fi
     
-    # Install K3s with default Traefik disabled
+    # Install with default Traefik disabled
     curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=servicelb --disable=local-storage --disable=traefik" sh -
     
-    # Wait for K3s to be ready
-    log_info "Waiting for K3s to be ready..."
+    # Wait for to be ready
+    log_info "Waiting for to be ready..."
     local retries=30
-    while ! k3s kubectl get nodes &>/dev/null && [[ $retries -gt 0 ]]; do
+    while ! kubectl get nodes &>/dev/null && [[ $retries -gt 0 ]]; do
         sleep 2
         ((retries--))
     done
     
     if [[ $retries -eq 0 ]]; then
-        log_error "K3s failed to start within timeout"
+        log_error "failed to start within timeout"
         exit 1
     fi
     
-    log_success "K3s installed and running"
+    log_success "installed and running"
 }
 
 # Setup kubectl access
 setup_kubectl() {
     log_info "Setting up kubectl access..."
     
-    # Copy K3s kubeconfig for easier access
+    # Copy kubeconfig for easier access
     mkdir -p ~/.kube
     cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
     chmod 600 ~/.kube/config
     
     # Create alias for easier access
-    echo "alias kubectl='k3s kubectl'" >> ~/.bashrc
+    echo "alias kubectl='kubectl'" >> ~/.bashrc
     
     log_success "kubectl access configured"
 }
@@ -106,16 +106,16 @@ cleanup_namespace() {
     log_info "Cleaning up existing namespace for fresh deployment..."
     
     # Check if namespace exists
-    if k3s kubectl get namespace headscale-vpn &>/dev/null; then
+    if kubectl get namespace headscale-vpn &>/dev/null; then
         log_warning "Existing namespace found, cleaning up..."
         
         # Delete namespace (this will cascade delete all resources)
-        k3s kubectl delete namespace headscale-vpn --timeout=60s
+        kubectl delete namespace headscale-vpn --timeout=60s
         
         # Wait for namespace to be fully deleted
         log_info "Waiting for namespace cleanup to complete..."
         local retries=30
-        while k3s kubectl get namespace headscale-vpn &>/dev/null && [[ $retries -gt 0 ]]; do
+        while kubectl get namespace headscale-vpn &>/dev/null && [[ $retries -gt 0 ]]; do
             sleep 2
             ((retries--))
         done
@@ -134,7 +134,7 @@ cleanup_namespace() {
 # Create namespace
 create_namespace() {
     log_info "Creating namespace..."
-    k3s kubectl apply -f "$K8S_DIR/namespace.yaml"
+    kubectl apply -f "$K8S_DIR/namespace.yaml"
     log_success "Namespace created"
 }
 
@@ -143,7 +143,7 @@ deploy_secrets() {
     log_info "Deploying secrets..."
     
     # Substitute environment variables in secrets.yaml
-    envsubst < "$K8S_DIR/secrets.yaml" | k3s kubectl apply -f -
+    envsubst < "$K8S_DIR/secrets.yaml" | kubectl apply -f -
     
     log_success "Secrets deployed"
 }
@@ -166,16 +166,16 @@ deploy_configmap() {
     done
     
     # Create configmap from processed files
-    k3s kubectl create configmap headscale-config \
+    kubectl create configmap headscale-config \
         --from-file="$temp_config_dir/" \
         -n headscale-vpn \
-        --dry-run=client -o yaml | k3s kubectl apply -f -
+        --dry-run=client -o yaml | kubectl apply -f -
     
     # Create configmap for VPN exit node config
-    k3s kubectl create configmap vpn-exit-config \
+    kubectl create configmap vpn-exit-config \
         --from-file="$CONFIG_DIR/vpn-exit/" \
         -n headscale-vpn \
-        --dry-run=client -o yaml | k3s kubectl apply -f -
+        --dry-run=client -o yaml | kubectl apply -f -
     
     # Cleanup
     rm -rf "$temp_config_dir"
@@ -186,14 +186,14 @@ deploy_configmap() {
 # Deploy storage
 deploy_storage() {
     log_info "Deploying storage..."
-    k3s kubectl apply -f "$K8S_DIR/storage.yaml"
+    kubectl apply -f "$K8S_DIR/storage.yaml"
     
     # Health check: Ensure PVCs are created (they will bind when first consumer starts)
     log_info "Verifying PVCs are created..."
     local retries=10
     while [[ $retries -gt 0 ]]; do
         local total_pvcs
-        total_pvcs=$(k3s kubectl get pvc -n headscale-vpn -o name 2>/dev/null | wc -l)
+        total_pvcs=$(kubectl get pvc -n headscale-vpn -o name 2>/dev/null | wc -l)
         if [[ $total_pvcs -eq 4 ]]; then
             log_success "All PVCs are created (will bind when pods start)"
             break
@@ -205,7 +205,7 @@ deploy_storage() {
     
     if [[ $retries -eq 0 ]]; then
         log_error "PVC creation failed"
-        k3s kubectl get pvc -n headscale-vpn
+        kubectl get pvc -n headscale-vpn
         exit 1
     fi
     
@@ -215,17 +215,17 @@ deploy_storage() {
 # Deploy database
 deploy_database() {
     log_info "Deploying PostgreSQL database..."
-    k3s kubectl apply -f "$K8S_DIR/database.yaml"
+    kubectl apply -f "$K8S_DIR/database.yaml"
     
     # Wait for database to be ready
     log_info "Waiting for database to be ready..."
     
     # Start background log streaming
-    k3s kubectl logs -f -l app=headscale-db -n headscale-vpn --tail=10 2>/dev/null &
+    kubectl logs -f -l app=headscale-db -n headscale-vpn --tail=10 2>/dev/null &
     local log_pid=$!
     
     # Wait for pod to be ready
-    k3s kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=300s
     
     # Stop log streaming
     kill $log_pid 2>/dev/null || true
@@ -234,7 +234,7 @@ deploy_database() {
     log_info "Testing database connection..."
     local retries=10
     while [[ $retries -gt 0 ]]; do
-        if k3s kubectl exec -n headscale-vpn deployment/headscale-db -- pg_isready -U headscale -d headscale; then
+        if kubectl exec -n headscale-vpn deployment/headscale-db -- pg_isready -U headscale -d headscale; then
             log_success "Database connection test passed"
             break
         fi
@@ -256,17 +256,17 @@ deploy_headscale() {
     log_info "Deploying Headscale..."
     
     # Deploy headscale (configmap already created in deploy_configmap)
-    k3s kubectl apply -f "$K8S_DIR/headscale.yaml"
+    kubectl apply -f "$K8S_DIR/headscale.yaml"
     
     # Wait for headscale to be ready
     log_info "Waiting for Headscale to be ready..."
     
     # Start background log streaming
-    k3s kubectl logs -f -l app=headscale -n headscale-vpn --tail=10 2>/dev/null &
+    kubectl logs -f -l app=headscale -n headscale-vpn --tail=10 2>/dev/null &
     local log_pid=$!
     
     # Wait for pod to be ready
-    k3s kubectl wait --for=condition=ready pod -l app=headscale -n headscale-vpn --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=headscale -n headscale-vpn --timeout=300s
     
     # Stop log streaming
     kill $log_pid 2>/dev/null || true
@@ -275,7 +275,7 @@ deploy_headscale() {
     log_info "Testing Headscale API health..."
     local retries=10
     while [[ $retries -gt 0 ]]; do
-        if k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale namespaces list >/dev/null 2>&1; then
+        if kubectl exec -n headscale-vpn deployment/headscale -- headscale namespaces list >/dev/null 2>&1; then
             log_success "Headscale API health check passed"
             break
         fi
@@ -302,7 +302,7 @@ build_vpn_exit_image() {
         "$PROJECT_ROOT"
     
     # Import image into k3s
-    docker save headscale-vpn/vpn-exit-node:latest | k3s ctr images import -
+    docker save headscale-vpn/vpn-exit-node:latest | ctr images import -
     
     log_success "VPN exit node image built and imported"
 }
@@ -319,21 +319,21 @@ deploy_vpn_exit() {
         exit 1
     fi
     
-    k3s kubectl create secret generic vpn-exit-secrets \
+    kubectl create secret generic vpn-exit-secrets \
         --from-file=wg0.conf="$CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf" \
         -n headscale-vpn \
-        --dry-run=client -o yaml | k3s kubectl apply -f -
+        --dry-run=client -o yaml | kubectl apply -f -
     
     # Create user if it doesn't exist
     log_info "Creating headscale user..."
-    if ! k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale users list | grep -q "vpn-admin"; then
-        k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale users create vpn-admin
+    if ! kubectl exec -n headscale-vpn deployment/headscale -- headscale users list | grep -q "vpn-admin"; then
+        kubectl exec -n headscale-vpn deployment/headscale -- headscale users create vpn-admin
     fi
     
     # Generate Headscale preauth key for the exit node
     log_info "Generating preauth key for VPN exit node..."
     local auth_key
-    auth_key=$(k3s kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user 1 --expiration 24h --reusable | grep -o '[a-f0-9]\{48\}')
+    auth_key=$(kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user 1 --expiration 24h --reusable | grep -o '[a-f0-9]\{48\}')
     
     if [[ -z "$auth_key" ]]; then
         log_error "Failed to generate preauth key for VPN exit node"
@@ -343,23 +343,23 @@ deploy_vpn_exit() {
     log_info "Generated preauth key for VPN exit node"
     
     # Create headscale-secrets if it doesn't exist
-    if ! k3s kubectl get secret headscale-secrets -n headscale-vpn >/dev/null 2>&1; then
-        k3s kubectl create secret generic headscale-secrets -n headscale-vpn \
+    if ! kubectl get secret headscale-secrets -n headscale-vpn >/dev/null 2>&1; then
+        kubectl create secret generic headscale-secrets -n headscale-vpn \
             --from-literal=headscale-authkey="$auth_key"
     else
         # Update the secret with the auth key
-        k3s kubectl patch secret headscale-secrets -n headscale-vpn --type='merge' -p="{\"data\":{\"headscale-authkey\":\"$(echo -n "$auth_key" | base64 -w 0)\"}}"
+        kubectl patch secret headscale-secrets -n headscale-vpn --type='merge' -p="{\"data\":{\"headscale-authkey\":\"$(echo -n "$auth_key" | base64 -w 0)\"}}"
     fi
     
     # Deploy the VPN exit node
-    k3s kubectl apply -f "$K8S_DIR/vpn-exit-node.yaml"
+    kubectl apply -f "$K8S_DIR/vpn-exit-node.yaml"
     
     # Wait for VPN exit node pod to be scheduled
     log_info "Waiting for VPN exit node to be scheduled..."
     local retries=30
     while [[ $retries -gt 0 ]]; do
         local pod_name
-        pod_name=$(k3s kubectl get pods -l app=vpn-exit-node -n headscale-vpn -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+        pod_name=$(kubectl get pods -l app=vpn-exit-node -n headscale-vpn -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
         if [[ -n "$pod_name" ]]; then
             log_info "VPN exit node pod scheduled: $pod_name"
             break
@@ -371,28 +371,28 @@ deploy_vpn_exit() {
     
     if [[ $retries -eq 0 ]]; then
         log_error "VPN exit node pod failed to schedule"
-        k3s kubectl describe daemonset vpn-exit-node -n headscale-vpn
+        kubectl describe daemonset vpn-exit-node -n headscale-vpn
         exit 1
     fi
     
     # Stream logs and wait for readiness
     log_info "Waiting for VPN exit node to start (this may take a few minutes)..."
     local pod_name
-    pod_name=$(k3s kubectl get pods -l app=vpn-exit-node -n headscale-vpn -o jsonpath='{.items[0].metadata.name}')
+    pod_name=$(kubectl get pods -l app=vpn-exit-node -n headscale-vpn -o jsonpath='{.items[0].metadata.name}')
     
     # Start background log streaming
-    k3s kubectl logs -f "$pod_name" -n headscale-vpn --tail=20 2>/dev/null &
+    kubectl logs -f "$pod_name" -n headscale-vpn --tail=20 2>/dev/null &
     local log_pid=$!
     
     # Wait for the container to be ready (may take time for Tailscale auth)
     retries=2  # 10 minutes timeout
     while [[ $retries -gt 0 ]]; do
         local pod_status
-        pod_status=$(k3s kubectl get pod "$pod_name" -n headscale-vpn -o jsonpath='{.status.phase}' 2>/dev/null)
+        pod_status=$(kubectl get pod "$pod_name" -n headscale-vpn -o jsonpath='{.status.phase}' 2>/dev/null)
         
         if [[ "$pod_status" == "Running" ]]; then
             # Check if tailscale is authenticated
-            if k3s kubectl exec -n headscale-vpn "$pod_name" -- /usr/local/bin/tailscale status --json 2>/dev/null | grep -q '"BackendState":"Running"'; then
+            if kubectl exec -n headscale-vpn "$pod_name" -- /usr/local/bin/tailscale status --json 2>/dev/null | grep -q '"BackendState":"Running"'; then
                 log_success "VPN exit node is running and authenticated with Headscale"
                 break
             fi
@@ -425,16 +425,16 @@ deploy_ingress() {
     
     # Clean up any existing TLS secrets that might conflict with ACME
     log_info "Cleaning up any existing TLS secrets..."
-    k3s kubectl delete secret headscale-tls -n headscale-vpn 2>/dev/null || true
+    kubectl delete secret headscale-tls -n headscale-vpn 2>/dev/null || true
     
     # Substitute environment variables in ingress.yaml
-    envsubst < "$K8S_DIR/ingress.yaml" | k3s kubectl apply -f -
+    envsubst < "$K8S_DIR/ingress.yaml" | kubectl apply -f -
     
     # Health check: Verify Traefik can route to services
     log_info "Testing ingress health..."
     local retries=2
     while [[ $retries -gt 0 ]]; do
-        if k3s kubectl get ingress -n headscale-vpn headscale-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null | grep -q .; then
+        if kubectl get ingress -n headscale-vpn headscale-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null | grep -q .; then
             log_success "Ingress health check passed"
             break
         fi
@@ -455,20 +455,20 @@ setup_storage() {
     log_info "Setting up storage provisioner..."
     
     # Check if local-path provisioner is already installed
-    if k3s kubectl get storageclass local-path &>/dev/null; then
+    if kubectl get storageclass local-path &>/dev/null; then
         log_warning "Local-path storage provisioner already installed"
     else
         log_info "Installing local-path storage provisioner..."
-        k3s kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
+        kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
         
         # Wait for the provisioner to be ready
         log_info "Waiting for storage provisioner to be ready..."
-        k3s kubectl wait --for=condition=available --timeout=60s deployment/local-path-provisioner -n local-path-storage
+        kubectl wait --for=condition=available --timeout=60s deployment/local-path-provisioner -n local-path-storage
     fi
     
     # Set local-path as default storage class
     log_info "Setting local-path as default storage class..."
-    k3s kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+    kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
     
     log_success "Storage provisioner configured"
 }
@@ -491,29 +491,29 @@ configure_traefik() {
     # Clean up any existing Traefik deployment to avoid port conflicts
     log_info "Cleaning up any existing Traefik deployment..."
     helm uninstall traefik -n traefik 2>/dev/null || true
-    k3s kubectl delete pods -n traefik --all --timeout=30s 2>/dev/null || true
+    kubectl delete pods -n traefik --all --timeout=30s 2>/dev/null || true
     
     # Wait for old pods to be fully removed
     log_info "Waiting for old Traefik pods to be removed..."
     local retries=10
-    while k3s kubectl get pods -n traefik --no-headers 2>/dev/null | grep -q . && [[ $retries -gt 0 ]]; do
+    while kubectl get pods -n traefik --no-headers 2>/dev/null | grep -q . && [[ $retries -gt 0 ]]; do
         sleep 2
         ((retries--))
     done
     
     # Create Cloudflare credentials secret for DNS-01 challenge
     log_info "Creating Cloudflare credentials secret for DNS-01 challenge..."
-    k3s kubectl create secret generic cloudflare-credentials \
+    kubectl create secret generic cloudflare-credentials \
         --from-literal=email="$CLOUDFLARE_EMAIL" \
         --from-literal=api-key="$CLOUDFLARE_API_KEY" \
         -n traefik \
-        --dry-run=client -o yaml | k3s kubectl apply -f -
+        --dry-run=client -o yaml | kubectl apply -f -
     
     # Create traefik namespace
-    k3s kubectl create namespace traefik --dry-run=client -o yaml | k3s kubectl apply -f -
+    kubectl create namespace traefik --dry-run=client -o yaml | kubectl apply -f -
     
     # Apply persistent volume for ACME storage first
-    k3s kubectl apply -f "$K8S_DIR/traefik-config.yaml"
+    kubectl apply -f "$K8S_DIR/traefik-config.yaml"
     
     # Install Traefik with our custom values (substitute environment variables)
     log_info "Installing Traefik with DNS-01 challenge configuration..."
@@ -537,21 +537,21 @@ health_check() {
     
     # Check all pods are running
     local failed_pods
-    failed_pods=$(k3s kubectl get pods -n headscale-vpn --no-headers | grep -v Running | wc -l)
+    failed_pods=$(kubectl get pods -n headscale-vpn --no-headers | grep -v Running | wc -l)
     
     if [[ $failed_pods -gt 0 ]]; then
         log_error "Some pods are not running:"
-        k3s kubectl get pods -n headscale-vpn
+        kubectl get pods -n headscale-vpn
         return 1
     fi
     
     # Check services
     log_info "Services status:"
-    k3s kubectl get services -n headscale-vpn
+    kubectl get services -n headscale-vpn
     
     # Check ingress
     log_info "Ingress status:"
-    k3s kubectl get ingress -n headscale-vpn
+    kubectl get ingress -n headscale-vpn
     
     log_success "All services are healthy"
 }
@@ -565,16 +565,17 @@ display_access_info() {
     echo "Traefik Dashboard: https://traefik.$DOMAIN"
     echo
     echo "=== Useful Commands ==="
-    echo "View pods: k3s kubectl get pods -n headscale-vpn"
-    echo "View services: k3s kubectl get services -n headscale-vpn"
-    echo "View logs: k3s kubectl logs -f deployment/headscale -n headscale-vpn"
-    echo "Create user: k3s kubectl exec -it deployment/headscale -n headscale-vpn -- headscale users create <username>"
+    echo "View pods: kubectl get pods -n headscale-vpn"
+    echo "View services: kubectl get services -n headscale-vpn"
+    echo "View logs: kubectl logs -f deployment/headscale -n headscale-vpn"
+    echo "Create user: kubectl exec -it deployment/headscale -n headscale-vpn -- headscale users create <username>"
     echo
 }
 
 # Main deployment function
 main() {
-    log_info "Starting K3s deployment for Headscale VPN..."
+    log_info "Starting deployment for Headscale VPN..."
+    kubectl config use-context mgmt-cluster
     
     check_root
     load_environment
@@ -594,7 +595,10 @@ main() {
     health_check
     display_access_info
     
-    log_success "K3s deployment completed successfully!"
+    log_success "deployment completed successfully!"
+
+    # TODO: revert to original context
+    # kubectl config use-context <original-context>
 }
 
 # Run main function
