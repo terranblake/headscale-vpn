@@ -443,7 +443,7 @@ setup_roles () {
     log_info "Waiting for roles to be created..."
     local retries=10
     while [[ $retries -gt 0 ]]; do
-        if kubectl get roles -n headscale-vpn | grep -q headscale; then
+        if kubectl get roles -n headscale-vpn | grep -q headplane; then
             log_success "Roles created successfully"
             break
         fi
@@ -592,9 +592,9 @@ main() {
     
     load_environment
     install_k3s
-    setup_roles  # Setup roles and role bindings for headscale
+    setup_roles
     setup_storage
-    configure_traefik  # Install Traefik FIRST to provide CRDs
+    configure_traefik
     cleanup_namespace
     create_namespace
     deploy_secrets
@@ -602,8 +602,8 @@ main() {
     deploy_storage
     deploy_database
     deploy_headscale
-    deploy_ingress  # Deploy ingress BEFORE VPN exit node so external domain is accessible
-    deploy_vpn_exit  # VPN exit node needs external domain to be working for DERP
+    deploy_ingress
+    deploy_vpn_exit
     health_check
     display_access_info
     
