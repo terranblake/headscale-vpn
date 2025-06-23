@@ -147,6 +147,11 @@ deploy_configmap() {
         --from-file="$temp_config_dir/" \
         -n headscale-vpn \
         --dry-run=client -o yaml | kubectl apply -f -
+
+    kubectl create configmap headplane-config \
+        --from-file="$CONFIG_DIR/headplane/" \
+        -n headscale-vpn \
+        --dry-run=client -o yaml | kubectl apply -f -
     
     # Create configmap for VPN exit node config
     kubectl create configmap vpn-exit-config \
@@ -165,17 +170,18 @@ deploy_storage() {
     log_info "Deploying storage..."
     kubectl apply -f "$K8S_DIR/storage.yaml"
     
+    # TODO: remove this shit
     # Health check: Ensure PVCs are created (they will bind when first consumer starts)
     log_info "Verifying PVCs are created..."
     local retries=10
     while [[ $retries -gt 0 ]]; do
         local total_pvcs
         total_pvcs=$(kubectl get pvc -n headscale-vpn -o name 2>/dev/null | wc -l)
-        if [[ $total_pvcs -eq 4 ]]; then
+        if [[ $total_pvcs -eq 5 ]]; then
             log_success "All PVCs are created (will bind when pods start)"
             break
         fi
-        log_warning "Waiting for PVCs to be created... ($total_pvcs/4 created, $retries attempts left)"
+        log_warning "Waiting for PVCs to be created... ($total_pvcs/5 created, $retries attempts left)"
         sleep 2
         ((retries--))
     done

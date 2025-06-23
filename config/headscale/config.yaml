@@ -41,6 +41,7 @@ database:
 
 # DERP configuration - self-hosted DERP server (no external Tailscale dependencies)
 derp:
+  omit_external: true
   server:
     enabled: true
     region_id: 999
@@ -96,6 +97,9 @@ dns:
 log:
   format: text
   level: info
+
+acl:
+  mode: database
 
 # ACL (Access Control List) configuration
 policy:
