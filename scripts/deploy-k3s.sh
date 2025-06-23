@@ -433,6 +433,33 @@ deploy_ingress() {
     log_success "Ingress deployed"
 }
 
+setup_roles () {
+    log_info "Setting up roles and role bindings..."
+    
+    # Create roles and role bindings for headscale
+    kubectl apply -f "$K8S_DIR/roles.yaml"
+    
+    # Wait for roles to be created
+    log_info "Waiting for roles to be created..."
+    local retries=10
+    while [[ $retries -gt 0 ]]; do
+        if kubectl get roles -n headscale-vpn | grep -q headscale; then
+            log_success "Roles created successfully"
+            break
+        fi
+        log_warning "Waiting for roles to be created... ($retries attempts left)"
+        sleep 2
+        ((retries--))
+    done
+    
+    if [[ $retries -eq 0 ]]; then
+        log_error "Failed to create roles"
+        exit 1
+    fi
+    
+    log_success "Roles and role bindings set up"
+}
+
 # Setup storage provisioner
 setup_storage() {
     log_info "Setting up storage provisioner..."
