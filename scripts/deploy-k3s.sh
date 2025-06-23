@@ -24,14 +24,6 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Check if running as root (required for installation)
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        log_error "This script must be run as root for installation"
-        exit 1
-    fi
-}
-
 # Load environment variables
 load_environment() {
     log_info "Loading environment variables..."
@@ -577,7 +569,6 @@ main() {
     log_info "Starting deployment for Headscale VPN..."
     kubectl config use-context mgmt-cluster
     
-    check_root
     load_environment
     install_k3s
     setup_kubectl
