@@ -116,3 +116,16 @@ spec:
     port: 3478
     targetPort: 3478
     protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: headplane
+  namespace: headscale-vpn
+spec:
+  selector:
+    app: headscale
+  ports:
+  - name: web
+    port: 3000
+    targetPort: 3000

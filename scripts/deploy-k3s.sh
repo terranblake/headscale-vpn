@@ -208,7 +208,7 @@ deploy_database() {
     local log_pid=$!
     
     # Wait for pod to be ready
-    kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=30s
+    kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=60s
     
     # Stop log streaming
     kill $log_pid 2>/dev/null || true
@@ -522,9 +522,6 @@ configure_traefik() {
     # Create traefik namespace
     kubectl create namespace traefik --dry-run=client -o yaml | kubectl apply -f -
     
-    # Apply persistent volume for ACME storage first
-    kubectl apply -f "$K8S_DIR/traefik-config.yaml"
-    
     # Install Traefik with our custom values (substitute environment variables)
     log_info "Installing Traefik with DNS-01 challenge configuration..."
     local temp_values="/tmp/traefik-values-processed.yaml"
@@ -592,11 +589,11 @@ main() {
     
     load_environment
     install_k3s
-    setup_roles
     setup_storage
     configure_traefik
     cleanup_namespace
     create_namespace
+    setup_roles
     deploy_secrets
     deploy_configmap
     deploy_storage
@@ -613,5 +610,5 @@ main() {
     # kubectl config use-context <original-context>
 }
 
-# Run main function
+# # Run main function
 main "$@"

@@ -41,7 +41,6 @@ database:
 
 # DERP configuration - self-hosted DERP server (no external Tailscale dependencies)
 derp:
-  omit_external: true
   server:
     enabled: true
     region_id: 999

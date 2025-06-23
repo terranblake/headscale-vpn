@@ -62,3 +62,15 @@ spec:
   resources:
     requests:
       storage: 100Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: traefik-acme-storage
+  namespace: traefik
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
