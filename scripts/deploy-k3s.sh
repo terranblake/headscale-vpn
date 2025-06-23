@@ -592,6 +592,7 @@ main() {
     
     load_environment
     install_k3s
+    setup_roles  # Setup roles and role bindings for headscale
     setup_storage
     configure_traefik  # Install Traefik FIRST to provide CRDs
     cleanup_namespace
