@@ -73,16 +73,17 @@ node_update_check_interval: 10s
 
 # DNS configuration
 dns:
-  # Override local DNS
+  # Override local DNS - force all clients to use specified DNS servers
   override_local_dns: true
   
-  # Nameservers to use
+  # Nameservers to use - these will be pushed to all clients
+  # Use external DNS servers that will be routed through the VPN exit node
   nameservers:
     global:
-      - 1.1.1.1
-      - 8.8.8.8
-      - 2606:4700:4700::1111
-      - 2001:4860:4860::8888
+      - 1.1.1.1     # Cloudflare DNS
+      - 8.8.8.8     # Google DNS
+      - 2606:4700:4700::1111  # Cloudflare IPv6
+      - 2001:4860:4860::8888  # Google IPv6
   
   # Search domains
   search_domains: []

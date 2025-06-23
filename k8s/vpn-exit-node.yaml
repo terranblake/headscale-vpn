@@ -25,14 +25,14 @@ spec:
           value: "custom"
         - name: VPN_TYPE
           value: "wireguard"
-        - name: FIREWALL_OUTBOUND_SUBNETS
-          value: "10.42.0.0/16,10.43.0.0/16,100.64.0.0/10,10.43.0.10/32"
         - name: WIREGUARD_MTU
           value: "1280"
-        - name: DNS_KEEP_NAMESERVER
-          value: "on"
-        - name: DNS_ADDRESS
-          value: "10.43.0.10"
+        # Route all traffic through VPN EXCEPT the Tailscale mesh network
+        # This allows Tailscale mesh connectivity while routing exit traffic through VPN
+        - name: OUTBOUND_SUBNETS
+          value: "0.0.0.0/0"
+        - name: OUTBOUND_SUBNETS_EXCLUDE
+          value: "100.64.0.0/10,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
@@ -51,6 +51,55 @@ spec:
           limits:
             memory: "128Mi"  
             cpu: "100m"
+      - name: dns-forwarder
+        image: alpine:latest
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          # Install dnsmasq
+          apk add --no-cache dnsmasq
+          
+          # Create dnsmasq config that forwards all DNS through the VPN
+          cat > /etc/dnsmasq.conf << 'EOF'
+          # Listen on all interfaces
+          interface=*
+          bind-interfaces
+          
+          # Forward all DNS queries through the VPN tunnel
+          server=1.1.1.1
+          server=8.8.8.8
+          
+          # Don't read /etc/resolv.conf
+          no-resolv
+          
+          # Don't read /etc/hosts
+          no-hosts
+          
+          # Cache settings
+          cache-size=1000
+          
+          # Log queries for debugging
+          log-queries
+          log-facility=/var/log/dnsmasq.log
+          EOF
+          
+          # Start dnsmasq
+          exec dnsmasq --no-daemon --log-facility=-
+        ports:
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 53
+          name: dns-udp
+          protocol: UDP
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
       - name: tailscale
         image: tailscale/tailscale
         env:
@@ -64,7 +113,7 @@ spec:
         - name: TS_HOSTNAME
           value: "vpn-exit-node"
         - name: TS_EXTRA_ARGS
-          value: "--login-server=http://headscale.headscale-vpn:8080 --advertise-exit-node --accept-routes=false --accept-dns=false"
+          value: "--login-server=http://headscale.headscale-vpn:8080 --advertise-exit-node --accept-routes=false --accept-dns=false --advertise-tags=tag:exit-node"
         - name: TS_USERSPACE
           value: "true"
         - name: TS_ACCEPT_DNS
@@ -103,3 +152,23 @@ spec:
           secretName: vpn-exit-secrets
       nodeSelector:
         kubernetes.io/os: linux
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vpn-exit-dns
+  namespace: headscale-vpn
+spec:
+  selector:
+    app: vpn-exit-node
+  ports:
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+    targetPort: 53
+  - name: dns-udp
+    port: 53
+    protocol: UDP
+    targetPort: 53
+  type: ClusterIP

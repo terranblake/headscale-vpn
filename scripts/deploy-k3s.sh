@@ -589,8 +589,8 @@ main() {
     deploy_storage
     deploy_database
     deploy_headscale
-    deploy_vpn_exit
-    deploy_ingress  # Deploy ingress AFTER Traefik is installed
+    deploy_ingress  # Deploy ingress BEFORE VPN exit node so external domain is accessible
+    deploy_vpn_exit  # VPN exit node needs external domain to be working for DERP
     health_check
     display_access_info
     
