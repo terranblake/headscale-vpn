@@ -243,7 +243,7 @@ deploy_headscale() {
     local log_pid=$!
     
     # Wait for pod to be ready
-    kubectl wait --for=condition=ready pod -l app=headscale -n headscale-vpn --timeout=30s
+    kubectl wait --for=condition=ready pod -l app=headscale -n headscale-vpn --timeout=60s
     
     # Stop log streaming
     kill $log_pid 2>/dev/null || true
@@ -290,14 +290,14 @@ deploy_vpn_exit() {
 
     # Create VPN exit secrets with WireGuard config
     log_info "Creating VPN exit secrets..."
-    if [[ ! -f "$CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf" ]]; then
-        log_error "WireGuard config file not found: $CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf"
+    if [[ ! -f "$CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf.private" ]]; then
+        log_error "WireGuard config file not found: $CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf.private"
         log_error "Please copy your WireGuard config file to this location"
         exit 1
     fi
     
     kubectl create secret generic vpn-exit-secrets \
-        --from-file=wg0.conf="$CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf" \
+        --from-file=wg0.conf="$CONFIG_DIR/vpn-exit/gluetun/us.seattle.exit.conf.private" \
         -n headscale-vpn \
         --dry-run=client -o yaml | kubectl apply -f -
     
@@ -381,7 +381,7 @@ deploy_vpn_exit() {
         fi
         
         log_warning "VPN exit node still starting... ($retries attempts left, status: $pod_status)"
-        sleep 5
+        sleep 20
         ((retries--))
     done
     
