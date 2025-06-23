@@ -258,7 +258,7 @@ deploy_headscale() {
     log_info "Testing Headscale API health..."
     local retries=10
     while [[ $retries -gt 0 ]]; do
-        if kubectl exec -n headscale-vpn deployment/headscale -- headscale namespaces list >/dev/null 2>&1; then
+        if kubectl exec -n headscale-vpn deployment/headscale -c headscale -- headscale namespaces list >/dev/null 2>&1; then
             log_success "Headscale API health check passed"
             break
         fi
@@ -309,14 +309,14 @@ deploy_vpn_exit() {
     
     # Create user if it doesn't exist
     log_info "Creating headscale user..."
-    if ! kubectl exec -n headscale-vpn deployment/headscale -- headscale users list | grep -q "vpn-admin"; then
-        kubectl exec -n headscale-vpn deployment/headscale -- headscale users create vpn-admin
+    if ! kubectl exec -n headscale-vpn deployment/headscale -c headscale -- headscale users list | grep -q "vpn-admin"; then
+        kubectl exec -n headscale-vpn deployment/headscale -c headscale -- headscale users create vpn-admin
     fi
     
     # Generate Headscale preauth key for the exit node
     log_info "Generating preauth key for VPN exit node..."
     local auth_key
-    auth_key=$(kubectl exec -n headscale-vpn deployment/headscale -- headscale preauthkeys create --user 1 --expiration 24h --reusable | grep -o '[a-f0-9]\{48\}')
+    auth_key=$(kubectl exec -n headscale-vpn deployment/headscale -c headscale -- headscale preauthkeys create --user 1 --expiration 24h --reusable | grep -o '[a-f0-9]\{48\}')
     
     if [[ -z "$auth_key" ]]; then
         log_error "Failed to generate preauth key for VPN exit node"
@@ -580,8 +580,8 @@ display_access_info() {
     echo "=== Useful Commands ==="
     echo "View pods: kubectl get pods -n headscale-vpn"
     echo "View services: kubectl get services -n headscale-vpn"
-    echo "View logs: kubectl logs -f deployment/headscale -n headscale-vpn"
-    echo "Create user: kubectl exec -it deployment/headscale -n headscale-vpn -- headscale users create <username>"
+    echo "View logs: kubectl logs -f deployment/headscale -c headscale -n headscale-vpn"
+    echo "Create user: kubectl exec -it deployment/headscale -c headscale -n headscale-vpn -- headscale users create <username>"
     echo
 }
 
