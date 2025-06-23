@@ -78,21 +78,6 @@ install_k3s() {
     log_success "installed and running"
 }
 
-# Setup kubectl access
-setup_kubectl() {
-    log_info "Setting up kubectl access..."
-    
-    # Copy kubeconfig for easier access
-    mkdir -p ~/.kube
-    cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-    chmod 600 ~/.kube/config
-    
-    # Create alias for easier access
-    echo "alias kubectl='kubectl'" >> ~/.bashrc
-    
-    log_success "kubectl access configured"
-}
-
 # Clean up existing namespace for fresh deployment
 cleanup_namespace() {
     log_info "Cleaning up existing namespace for fresh deployment..."
@@ -571,7 +556,6 @@ main() {
     
     load_environment
     install_k3s
-    setup_kubectl
     setup_storage
     configure_traefik  # Install Traefik FIRST to provide CRDs
     cleanup_namespace
