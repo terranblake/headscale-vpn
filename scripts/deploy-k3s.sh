@@ -202,14 +202,14 @@ deploy_database() {
     local log_pid=$!
     
     # Wait for pod to be ready
-    kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=headscale-db -n headscale-vpn --timeout=30s
     
     # Stop log streaming
     kill $log_pid 2>/dev/null || true
     
     # Health check: Test database connection
     log_info "Testing database connection..."
-    local retries=10
+    local retries=2
     while [[ $retries -gt 0 ]]; do
         if kubectl exec -n headscale-vpn deployment/headscale-db -- pg_isready -U headscale -d headscale; then
             log_success "Database connection test passed"
@@ -243,7 +243,7 @@ deploy_headscale() {
     local log_pid=$!
     
     # Wait for pod to be ready
-    kubectl wait --for=condition=ready pod -l app=headscale -n headscale-vpn --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=headscale -n headscale-vpn --timeout=30s
     
     # Stop log streaming
     kill $log_pid 2>/dev/null || true
@@ -257,7 +257,7 @@ deploy_headscale() {
             break
         fi
         log_warning "Headscale API health check failed, retrying... ($retries attempts left)"
-        sleep 10
+        sleep 2
         ((retries--))
     done
     
@@ -440,7 +440,7 @@ setup_storage() {
         
         # Wait for the provisioner to be ready
         log_info "Waiting for storage provisioner to be ready..."
-        kubectl wait --for=condition=available --timeout=60s deployment/local-path-provisioner -n local-path-storage
+        kubectl wait --for=condition=available --timeout=30s deployment/local-path-provisioner -n local-path-storage
     fi
     
     # Set local-path as default storage class
