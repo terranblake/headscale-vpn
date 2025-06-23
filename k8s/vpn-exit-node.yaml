@@ -25,14 +25,15 @@ spec:
           value: "custom"
         - name: VPN_TYPE
           value: "wireguard"
+        - name: FIREWALL_OUTBOUND_SUBNETS
+          value: "10.42.0.0/16,10.43.0.0/16,100.64.0.0/10"
         - name: WIREGUARD_MTU
           value: "1280"
-        # Route all traffic through VPN EXCEPT cluster networking
-        # This allows Tailscale to reach Headscale while routing everything else through VPN
-        - name: OUTBOUND_SUBNETS
-          value: "0.0.0.0/0"
-        - name: OUTBOUND_SUBNETS_EXCLUDE
-          value: "10.42.0.0/16"
+        # Use external DNS for VPN traffic, but allow cluster DNS for pod operations
+        - name: DNS_KEEP_NAMESERVER
+          value: "off"
+        - name: DNS_ADDRESS
+          value: "1.1.1.1,8.8.8.8"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
