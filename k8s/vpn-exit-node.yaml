@@ -27,12 +27,12 @@ spec:
           value: "wireguard"
         - name: WIREGUARD_MTU
           value: "1280"
-        # Route all traffic through VPN EXCEPT the Tailscale mesh network
-        # This allows Tailscale mesh connectivity while routing exit traffic through VPN
+        # Route all traffic through VPN EXCEPT cluster networking
+        # This allows Tailscale to reach Headscale while routing everything else through VPN
         - name: OUTBOUND_SUBNETS
           value: "0.0.0.0/0"
         - name: OUTBOUND_SUBNETS_EXCLUDE
-          value: "100.64.0.0/10,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.42.0.0/16"
+          value: "10.42.0.0/16"
         volumeMounts:
         - name: tun-device
           mountPath: /dev/net/tun
